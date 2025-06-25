@@ -4,7 +4,7 @@ export default function Header() {
       <div class="navbar-start">
       </div>
       <div class="navbar-center">
-        <h1 class="primary">HEADER-PLACEHOLDER</h1>
+        <h1 class="text-2xl primary">HEADER-PLACEHOLDER</h1>
       </div>
       <div class="navbar-end">
       </div>

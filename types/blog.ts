@@ -21,7 +21,7 @@ export interface PostSummary {
   tags: string[];
   slug: string;
   url: string;
-  excerpt?: string; // customer or generated
+  excerpt?: string; // custom or generated
 }
 
 export interface BlogConfig {
