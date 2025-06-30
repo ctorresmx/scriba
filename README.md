@@ -4,14 +4,13 @@ A minimalist blogging platform built for developers who want to write, not wrest
 
 ## What is Scriba?
 
-Scriba transforms simple Markdown files into a clean, fast blog with a terminal-inspired aesthetic. Write your posts in your favorite editor, commit them to Git, and deploy with Docker. No databases, no admin panels, no complexity.
+Scriba transforms simple Markdown files into a minimal, fast blog with a clean aesthetic. Write your posts in your favorite editor, commit them to Git, and deploy with Docker. No databases, no admin panels, no complexity.
 
 ## Key Features
 
 - **Markdown-first**: Write posts in plain Markdown with frontmatter metadata
 - **Git-based workflow**: Version control your content alongside your code
 - **Docker deployment**: Deploy anywhere containers run
-- **CLI aesthetic**: Clean, distraction-free reading experience
 - **Fast & lightweight**: Server-side rendering with minimal JavaScript
 - **SEO-friendly**: Semantic URLs and proper metadata handling
 
@@ -31,18 +30,18 @@ No vendor lock-in. No proprietary formats. Just Markdown, Git, and Docker.
 ## Quick Start
 
 ```bash
-# Clone the template
-git clone https://github.com/yourusername/scriba-template.git
+# Clone this repository
+git clone https://github.com/ctorresmx/scriba.git my-blog
+cd my-blog
 
 # Create your content
-mkdir my-blog && cd my-blog
 # ... add your posts and configuration
 
 # Deploy
 deno task start
 ```
 
-Your blog is now running at `http://localhost:8000`. This will watch the project directory and restart as necessary.
+Your blog is now running at `http://localhost:8000`. The development server will watch for file changes and automatically restart.
 
 ## License
 AGPL v3 License - use it, modify it, share it. If you run a modified version as a service, you must share your changes.
