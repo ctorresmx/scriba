@@ -4,7 +4,7 @@ A minimalist blogging platform built for developers who want to write, not wrest
 
 ## What is Scriba?
 
-Scriba transforms simple Markdown files into a minimal, fast blog with a clean aesthetic. Write your posts in your favorite editor, commit them to git, and deploy with Docker. No databases, no admin panels, no complexity.
+Scriba transforms simple Markdown files into a minimal, fast blog with a clean aesthetic. Write your posts in your favorite editor, commit them to Git, and deploy with Docker. No databases, no admin panels, no complexity.
 
 ## Key Features
 
@@ -31,7 +31,7 @@ No vendor lock-in. No proprietary formats. Just Markdown, Git, and Docker.
 
 ```bash
 # Clone this repository
-git clone https://github.com/username/scriba.git my-blog
+git clone https://github.com/ctorresmx/scriba.git my-blog
 cd my-blog
 
 # Create your content
