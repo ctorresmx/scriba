@@ -1,10 +1,14 @@
 import ArticleSummary from "../components/ArticleSummary.tsx";
+import { getAllPosts } from "../utils/parsing.ts";
 
-export default function Home() {
+export default async function Home() {
+  const posts = await getAllPosts();
+
   return (
     <div class="flex flex-col items-center p-4">
-      <ArticleSummary title="First article" summary="This is an example of an article" />
-      <ArticleSummary title="Second article" summary="This is another example of an article" />
+      {posts.map((post) => {
+        return <ArticleSummary key={post.slug} post={post} />
+      })}
     </div>
   );
 }
