@@ -1,27 +1,17 @@
-export interface FrontmatterPost {
+export interface PostAttributes {
   title: string;
-  date: string; // YYYY-MM-DD format
+  date: Date;
   author: string;
   tags: string[];
   status: "draft" | "published" | "scheduled";
+  excerpt?: string;
 }
 
 export interface ParsedPost {
-  frontmatter: FrontmatterPost;
+  attributes: PostAttributes;
   content: string;
   slug: string;
-  filename: string;
   url: string; // Generated URL like YYYY/MM/DD/slug
-}
-
-export interface PostSummary {
-  title: string;
-  date: string;
-  author: string;
-  tags: string[];
-  slug: string;
-  url: string;
-  excerpt?: string; // custom or generated
 }
 
 export interface BlogConfig {
