@@ -12,6 +12,7 @@ export interface ParsedPost {
   content: string;
   slug: string;
   url: string; // Generated URL like YYYY/MM/DD/slug
+  formattedDate: string; // Formatted date like YYYY/MM/DD
 }
 
 export interface BlogConfig {

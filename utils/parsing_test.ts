@@ -1,5 +1,5 @@
 import { assertEquals, assertRejects } from "$std/assert/mod.ts";
-import { getAllPosts, parseMarkdownFile, generateSlug, generateUrl } from "./parsing.ts";
+import { getAllPosts, parseMarkdownFile, generateSlug, generateUrl, formatDate } from "./parsing.ts";
 
 Deno.test("generateSlug - basic title conversion", () => {
   assertEquals(generateSlug("Hello World"), "hello-world");
@@ -193,4 +193,53 @@ Invalid content`;
     Deno.chdir(originalDir);
     await Deno.remove(tempDir, { recursive: true });
   }
+});
+
+Deno.test("formatDate - basic date formatting", () => {
+  assertEquals(formatDate(new Date("2025-01-15")), "2025/01/15");
+  assertEquals(formatDate(new Date("2025-12-31")), "2025/12/31");
+  assertEquals(formatDate(new Date("2024-07-04")), "2024/07/04");
+});
+
+Deno.test("formatDate - single digit months and days", () => {
+  assertEquals(formatDate(new Date("2025-01-01")), "2025/01/01");
+  assertEquals(formatDate(new Date("2025-01-09")), "2025/01/09");
+  assertEquals(formatDate(new Date("2025-09-01")), "2025/09/01");
+  assertEquals(formatDate(new Date("2025-02-05")), "2025/02/05");
+});
+
+Deno.test("formatDate - leap year dates", () => {
+  assertEquals(formatDate(new Date("2024-02-29")), "2024/02/29");
+  assertEquals(formatDate(new Date("2020-02-29")), "2020/02/29");
+});
+
+Deno.test("formatDate - edge case dates", () => {
+  // New Year's Day
+  assertEquals(formatDate(new Date("2025-01-01")), "2025/01/01");
+  // New Year's Eve
+  assertEquals(formatDate(new Date("2025-12-31")), "2025/12/31");
+  // Different centuries
+  assertEquals(formatDate(new Date("1999-12-31")), "1999/12/31");
+  assertEquals(formatDate(new Date("2000-01-01")), "2000/01/01");
+});
+
+Deno.test("formatDate - various years", () => {
+  assertEquals(formatDate(new Date("1990-06-15")), "1990/06/15");
+  assertEquals(formatDate(new Date("2010-03-20")), "2010/03/20");
+  assertEquals(formatDate(new Date("2030-11-08")), "2030/11/08");
+});
+
+Deno.test("formatDate - all months", () => {
+  assertEquals(formatDate(new Date("2025-01-15")), "2025/01/15");
+  assertEquals(formatDate(new Date("2025-02-15")), "2025/02/15");
+  assertEquals(formatDate(new Date("2025-03-15")), "2025/03/15");
+  assertEquals(formatDate(new Date("2025-04-15")), "2025/04/15");
+  assertEquals(formatDate(new Date("2025-05-15")), "2025/05/15");
+  assertEquals(formatDate(new Date("2025-06-15")), "2025/06/15");
+  assertEquals(formatDate(new Date("2025-07-15")), "2025/07/15");
+  assertEquals(formatDate(new Date("2025-08-15")), "2025/08/15");
+  assertEquals(formatDate(new Date("2025-09-15")), "2025/09/15");
+  assertEquals(formatDate(new Date("2025-10-15")), "2025/10/15");
+  assertEquals(formatDate(new Date("2025-11-15")), "2025/11/15");
+  assertEquals(formatDate(new Date("2025-12-15")), "2025/12/15");
 });
