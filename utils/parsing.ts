@@ -33,12 +33,14 @@ export async function parseMarkdownFile(filepath: string): Promise<ParsedPost> {
     const { attrs, body } = extract<PostAttributes>(content);
     const slug = generateSlug(attrs.title);
     const url = generateUrl(attrs.date, slug);
+    const formattedDate = formatDate(attrs.date);
 
     return {
       attributes: attrs,
       content: body,
       slug: slug,
       url: url,
+      formattedDate: formattedDate,
     };
 
   } catch (error) {
@@ -57,8 +59,13 @@ export function generateSlug(title: string): string {
 }
 
 export function generateUrl(date: Date, slug: string): string {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate() + 1).padStart(2, "0");
-  return `/${year}/${month}/${day}/${slug}`;
+  return `/${formatDate(date)}/${slug}`;
+}
+
+export function formatDate(date: Date): string {
+  const year = date.getUTCFullYear();
+  const month = String(date.getUTCMonth() + 1).padStart(2, "0");
+  const day = String(date.getUTCDate()).padStart(2, "0");
+
+  return `${year}/${month}/${day}`;
 }

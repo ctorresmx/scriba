@@ -4,7 +4,9 @@ export default function Header() {
       <div class="navbar-start">
       </div>
       <div class="navbar-center">
-        <h1 class="text-2xl primary">HEADER-PLACEHOLDER</h1>
+        <a href="/" class="no-underline hover:no-underline visited:text-current">
+          <h1 class="text-2xl primary">HEADER-PLACEHOLDER</h1>
+        </a>
       </div>
       <div class="navbar-end">
       </div>
