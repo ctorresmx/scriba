@@ -1,11 +1,11 @@
 import { BlogConfig } from "../types/blog.ts";
 
 export function getBlogHeaderTitle(pageHeader?: string): string {
-    const { name } = getBlogConfig();
+    const { title } = getBlogConfig();
     if (pageHeader) {
-        return `${pageHeader} - ${name}`;
+        return `${pageHeader} - ${title}`;
     }
-    return `${name}`;
+    return `${title}`;
 }
 
 export function getBlogConfig(): BlogConfig {

@@ -62,37 +62,37 @@ Deno.test("getBlogConfig - returns env values when set", () => {
 });
 
 Deno.test("getBlogHeaderTitle - returns blog name when no page header provided", () => {
-  const originalEnv = Deno.env.get("BLOG_NAME");
+  const originalEnv = Deno.env.get("BLOG_TITLE");
 
   try {
-    Deno.env.set("BLOG_NAME", "My Blog");
+    Deno.env.set("BLOG_TITLE", "My Blog");
 
     const title = getBlogHeaderTitle();
 
     assertEquals(title, "My Blog");
   } finally {
     if (originalEnv) {
-      Deno.env.set("BLOG_NAME", originalEnv);
+      Deno.env.set("BLOG_TITLE", originalEnv);
     } else {
-      Deno.env.delete("BLOG_NAME");
+      Deno.env.delete("BLOG_TITLE");
     }
   }
 });
 
 Deno.test("getBlogHeaderTitle - returns page header with blog name when page header provided", () => {
-  const originalEnv = Deno.env.get("BLOG_NAME");
+  const originalEnv = Deno.env.get("BLOG_TITLE");
 
   try {
-    Deno.env.set("BLOG_NAME", "My Blog");
+    Deno.env.set("BLOG_TITLE", "My Blog");
 
     const title = getBlogHeaderTitle("About");
 
     assertEquals(title, "About - My Blog");
   } finally {
     if (originalEnv) {
-      Deno.env.set("BLOG_NAME", originalEnv);
+      Deno.env.set("BLOG_TITLE", originalEnv);
     } else {
-      Deno.env.delete("BLOG_NAME");
+      Deno.env.delete("BLOG_TITLE");
     }
   }
 });
