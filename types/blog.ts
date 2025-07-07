@@ -16,9 +16,7 @@ export interface ParsedPost {
 }
 
 export interface BlogConfig {
+  name: string;
   title: string;
-  description: string;
-  author: string;
-  baseUrl: string;
-  postsPerPage: number;
+  copyright: string;
 }

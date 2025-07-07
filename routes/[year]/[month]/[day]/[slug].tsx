@@ -4,6 +4,7 @@ import { render } from "@deno/gfm";
 import { ParsedPost } from "../../../../types/blog.ts";
 import { getAllPosts } from "../../../../utils/parsing.ts";
 import AuthorDateDetails from "../../../../components/AuthorDateDetails.tsx";
+import { getBlogHeaderTitle } from "../../../../utils/config.ts";
 
 interface ArticlePageProps {
   post: ParsedPost;
@@ -33,7 +34,7 @@ export default function ArticlePage({ data }: PageProps<ArticlePageProps>) {
   return (
     <>
       <Head>
-        <title>{post.attributes.title} - Scriba</title>
+        <title>{getBlogHeaderTitle(post.attributes.title)}</title>
       </Head>
     
       <article class="max-w-4xl mx-auto px-4 py-8">
