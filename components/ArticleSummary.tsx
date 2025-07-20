@@ -33,11 +33,12 @@ export default function ArticleSummary({ post }: Props) {
           </div>
         )}
 
-        {post.attributes.excerpt ?
-          <p>{post.attributes.excerpt}</p>
-          : <div class="prose prose-sm mb-4 line-clamp-3 article-summary"
-              dangerouslySetInnerHTML={{ __html: render(post.content) }} />
-        }
+        {post.attributes.excerpt ? <p>{post.attributes.excerpt}</p> : (
+          <div
+            class="prose prose-sm mb-4 line-clamp-3 article-summary"
+            dangerouslySetInnerHTML={{ __html: render(post.content) }}
+          />
+        )}
         <div class="card-actions justify-end">
           <a href={post.url} class="btn btn-primary">
             Read more

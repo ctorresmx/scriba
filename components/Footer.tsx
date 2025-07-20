@@ -1,4 +1,4 @@
-import { getBlogConfig } from "../utils/config.ts"
+import { getBlogConfig } from "../utils/config.ts";
 
 export default function Footer() {
   const { copyright } = getBlogConfig();
@@ -8,5 +8,5 @@ export default function Footer() {
         <p>Copyright © {new Date().getFullYear()} {copyright}</p>
       </aside>
     </footer>
-  )
+  );
 }

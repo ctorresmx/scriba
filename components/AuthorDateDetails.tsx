@@ -13,5 +13,5 @@ export default function AuthorDateDetails({ post }: Props) {
         {post.formattedDate}
       </time>
     </>
-  )
+  );
 }

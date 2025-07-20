@@ -2,11 +2,11 @@
 @plugin "daisyui";
 
 body {
-    font-family: monospace !important;
+  font-family: monospace !important;
 }
 
 .markdown-body {
-    font-family: monospace !important;
+  font-family: monospace !important;
 }
 
 .article-summary h1 .anchor,
@@ -15,5 +15,5 @@ body {
 .article-summary h4 .anchor,
 .article-summary h5 .anchor,
 .article-summary h6 .anchor {
-    display: none !important;
+  display: none !important;
 }

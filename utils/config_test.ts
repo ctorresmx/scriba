@@ -20,8 +20,12 @@ Deno.test("getBlogConfig - returns default values when env vars are not set", ()
     assertEquals(config.copyright, "Scriba");
   } finally {
     if (originalEnv.BLOG_NAME) Deno.env.set("BLOG_NAME", originalEnv.BLOG_NAME);
-    if (originalEnv.BLOG_TITLE) Deno.env.set("BLOG_TITLE", originalEnv.BLOG_TITLE);
-    if (originalEnv.BLOG_COPYRIGHT) Deno.env.set("BLOG_COPYRIGHT", originalEnv.BLOG_COPYRIGHT);
+    if (originalEnv.BLOG_TITLE) {
+      Deno.env.set("BLOG_TITLE", originalEnv.BLOG_TITLE);
+    }
+    if (originalEnv.BLOG_COPYRIGHT) {
+      Deno.env.set("BLOG_COPYRIGHT", originalEnv.BLOG_COPYRIGHT);
+    }
   }
 });
 
