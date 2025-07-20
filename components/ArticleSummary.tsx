@@ -8,7 +8,7 @@ interface Props {
 
 export default function ArticleSummary({ post }: Props) {
   return (
-    <div class="card card-border bg-base-300 w-3/4 shadow-sm m-4">
+    <div class="card card-border bg-[#2a323c] w-3/4 shadow-sm m-4">
       <div class="card-body">
         <h2 class="card-title">
           <a href={post.url} class="hover:text-primary">
@@ -35,7 +35,7 @@ export default function ArticleSummary({ post }: Props) {
 
         {post.attributes.excerpt ?
           <p>{post.attributes.excerpt}</p>
-          : <div class="prose prose-sm mb-4 line-clamp-3"
+          : <div class="prose prose-sm mb-4 line-clamp-3 article-summary"
               dangerouslySetInnerHTML={{ __html: render(post.content) }} />
         }
         <div class="card-actions justify-end">
