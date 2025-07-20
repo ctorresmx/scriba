@@ -1,0 +1,35 @@
+name: Test
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Deno
+        uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+
+      - name: Verify formatting
+        run: deno fmt --check
+
+      - name: Run linter
+        run: deno lint --rules-exclude=react-no-danger
+
+      - name: Type check TypeScript files
+        run: deno check **/*.ts **/*.tsx
+
+      - name: Run tests
+        run: deno test --allow-read --allow-write --allow-net --allow-env
+
+      - name: Build project
+        run: deno task build
