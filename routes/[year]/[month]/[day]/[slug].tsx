@@ -1,10 +1,14 @@
 import { Handlers, PageProps } from "$fresh/server.ts";
 import { Head } from "$fresh/runtime.ts";
-import { render } from "@deno/gfm";
 import { ParsedPost } from "../../../../types/blog.ts";
 import { getAllPosts } from "../../../../utils/parsing.ts";
 import AuthorDateDetails from "../../../../components/AuthorDateDetails.tsx";
 import { getBlogHeaderTitle } from "../../../../utils/config.ts";
+import { CSS, render } from "@deno/gfm";
+import "npm:prismjs@1.29.0/components/prism-typescript.js";
+import "npm:prismjs@1.29.0/components/prism-java.js";
+import "npm:prismjs@1.29.0/components/prism-json.js";
+import "npm:prismjs@1.29.0/components/prism-diff.js";
 
 interface ArticlePageProps {
   post: ParsedPost;
@@ -35,6 +39,13 @@ export default function ArticlePage({ data }: PageProps<ArticlePageProps>) {
     <>
       <Head>
         <title>{getBlogHeaderTitle(post.attributes.title)}</title>
+        <style dangerouslySetInnerHTML={{ __html: CSS }} />
+        <style>{`
+          .markdown-body {
+            background-color: #2a323c !important;
+            background: #2a323c !important;
+          }
+        `}</style>
       </Head>
     
       <article class="max-w-4xl mx-auto px-4 py-8">
@@ -60,7 +71,8 @@ export default function ArticlePage({ data }: PageProps<ArticlePageProps>) {
         </header>
 
         <div 
-          class="prose prose-lg max-w-none"
+          data-color-mode="dark" data-dark-theme="dark"
+          class="markdown-body p-6 rounded-lg"
           dangerouslySetInnerHTML={{ __html: render(post.content) }}
         />
       </article>
