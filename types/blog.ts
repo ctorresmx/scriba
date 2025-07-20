@@ -19,4 +19,5 @@ export interface BlogConfig {
   name: string;
   title: string;
   copyright: string;
+  postsDir: string;
 }
