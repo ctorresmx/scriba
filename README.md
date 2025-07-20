@@ -1,10 +1,13 @@
 # Scriba
 
-A minimalist blogging platform built for developers who want to write, not wrestle with complex content management systems.
+A minimalist blogging platform built for developers who want to write, not
+wrestle with complex content management systems.
 
 ## What is Scriba?
 
-Scriba transforms simple Markdown files into a minimal, fast blog with a clean aesthetic. Write your posts in your favorite editor, commit them to Git, and deploy with Docker. No databases, no admin panels, no complexity.
+Scriba transforms simple Markdown files into a minimal, fast blog with a clean
+aesthetic. Write your posts in your favorite editor, commit them to Git, and
+deploy with Docker. No databases, no admin panels, no complexity.
 
 ## Key Features
 
@@ -23,7 +26,9 @@ Scriba transforms simple Markdown files into a minimal, fast blog with a clean a
 
 ## Philosophy
 
-Scriba believes that blogging software should get out of your way. Your content lives in simple text files. Your blog deploys like any other application. Your writing workflow integrates with your existing development tools.
+Scriba believes that blogging software should get out of your way. Your content
+lives in simple text files. Your blog deploys like any other application. Your
+writing workflow integrates with your existing development tools.
 
 No vendor lock-in. No proprietary formats. Just Markdown, Git, and Docker.
 
@@ -41,7 +46,10 @@ cd my-blog
 deno task start
 ```
 
-Your blog is now running at `http://localhost:8000`. The development server will watch for file changes and automatically restart.
+Your blog is now running at `http://localhost:8000`. The development server will
+watch for file changes and automatically restart.
 
 ## License
-AGPL v3 License - use it, modify it, share it. If you run a modified version as a service, you must share your changes.
+
+AGPL v3 License - use it, modify it, share it. If you run a modified version as
+a service, you must share your changes.

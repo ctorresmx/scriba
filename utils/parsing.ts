@@ -1,16 +1,19 @@
 import { walk } from "$std/fs/walk.ts";
-import { PostAttributes, ParsedPost } from "../types/blog.ts";
+import { ParsedPost, PostAttributes } from "../types/blog.ts";
 import { extract } from "@std/front-matter/yaml";
+import { getBlogConfig } from "./config.ts";
 
 export async function getAllPosts(): Promise<ParsedPost[]> {
   const posts: ParsedPost[] = [];
-  const postsDir = "./posts";
+  const { postsDir } = getBlogConfig();
 
   try {
-    for await (const entry of walk(postsDir, {
-      exts: [".md"],
-      includeDirs: false,
-    })) {
+    for await (
+      const entry of walk(postsDir, {
+        exts: [".md"],
+        includeDirs: false,
+      })
+    ) {
       try {
         const post = await parseMarkdownFile(entry.path);
         posts.push(post);
@@ -42,7 +45,6 @@ export async function parseMarkdownFile(filepath: string): Promise<ParsedPost> {
       url: url,
       formattedDate: formattedDate,
     };
-
   } catch (error) {
     throw new Error(`Failed to parse ${filepath}: ${error}`);
   }
@@ -51,10 +53,10 @@ export async function parseMarkdownFile(filepath: string): Promise<ParsedPost> {
 export function generateSlug(title: string): string {
   return title
     .toLowerCase()
-    .replace(/[^a-z0-9\s-]/g, '') // Remove special characters
-    .replace(/\s+/g, '-')         // Replace spaces with hyphens
-    .replace(/-+/g, '-')          // Replace multiple hyphens with single
-    .replace(/^-+|-+$/g, '')      // Remove leading/trailing hyphens
+    .replace(/[^a-z0-9\s-]/g, "") // Remove special characters
+    .replace(/\s+/g, "-") // Replace spaces with hyphens
+    .replace(/-+/g, "-") // Replace multiple hyphens with single
+    .replace(/^-+|-+$/g, "") // Remove leading/trailing hyphens
     .trim();
 }
 

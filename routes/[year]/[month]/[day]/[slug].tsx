@@ -12,14 +12,14 @@ import "npm:prismjs@1.29.0/components/prism-diff.js";
 
 interface ArticlePageProps {
   post: ParsedPost;
-};
+}
 
 export const handler: Handlers<ArticlePageProps> = {
   async GET(_req, ctx) {
     const { year, month, day, slug } = ctx.params;
 
     const posts = await getAllPosts();
-    const post = posts.find(p => {
+    const post = posts.find((p) => {
       const formattedDate = `${year}/${month}/${day}`;
       return formattedDate === p.formattedDate &&
         slug === p.slug && p.attributes.status === "published";
@@ -34,24 +34,26 @@ export const handler: Handlers<ArticlePageProps> = {
 
 export default function ArticlePage({ data }: PageProps<ArticlePageProps>) {
   const { post } = data;
-  
+
   return (
     <>
       <Head>
         <title>{getBlogHeaderTitle(post.attributes.title)}</title>
         <style dangerouslySetInnerHTML={{ __html: CSS }} />
-        <style>{`
+        <style>
+          {`
           .markdown-body {
             background-color: #2a323c !important;
             background: #2a323c !important;
           }
-        `}</style>
+        `}
+        </style>
       </Head>
-    
+
       <article class="max-w-4xl mx-auto px-4 py-8">
         <header class="mb-8">
           <h1 class="text-4xl font-bold mb-4">{post.attributes.title}</h1>
-          
+
           <div class="flex flex-wrap items-center gap-1 text-sm text-base-content/70 mb-4">
             <AuthorDateDetails post={post} />
           </div>
@@ -59,7 +61,7 @@ export default function ArticlePage({ data }: PageProps<ArticlePageProps>) {
           {post.attributes.tags.length > 0 && (
             <div class="flex flex-wrap gap-2">
               {post.attributes.tags.map((tag) => (
-                <span 
+                <span
                   key={tag}
                   class="badge badge-outline"
                 >
@@ -70,8 +72,9 @@ export default function ArticlePage({ data }: PageProps<ArticlePageProps>) {
           )}
         </header>
 
-        <div 
-          data-color-mode="dark" data-dark-theme="dark"
+        <div
+          data-color-mode="dark"
+          data-dark-theme="dark"
           class="markdown-body p-6 rounded-lg"
           dangerouslySetInnerHTML={{ __html: render(post.content) }}
         />

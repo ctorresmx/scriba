@@ -6,22 +6,32 @@ Deno.test("getBlogConfig - returns default values when env vars are not set", ()
     BLOG_NAME: Deno.env.get("BLOG_NAME"),
     BLOG_TITLE: Deno.env.get("BLOG_TITLE"),
     BLOG_COPYRIGHT: Deno.env.get("BLOG_COPYRIGHT"),
+    BLOG_POSTS_DIR: Deno.env.get("BLOG_POSTS_DIR"),
   };
 
   try {
     Deno.env.delete("BLOG_NAME");
     Deno.env.delete("BLOG_TITLE");
     Deno.env.delete("BLOG_COPYRIGHT");
+    Deno.env.delete("BLOG_POSTS_DIR");
 
     const config = getBlogConfig();
 
     assertEquals(config.name, "Scriba");
     assertEquals(config.title, "Scriba");
     assertEquals(config.copyright, "Scriba");
+    assertEquals(config.postsDir, "./posts");
   } finally {
     if (originalEnv.BLOG_NAME) Deno.env.set("BLOG_NAME", originalEnv.BLOG_NAME);
-    if (originalEnv.BLOG_TITLE) Deno.env.set("BLOG_TITLE", originalEnv.BLOG_TITLE);
-    if (originalEnv.BLOG_COPYRIGHT) Deno.env.set("BLOG_COPYRIGHT", originalEnv.BLOG_COPYRIGHT);
+    if (originalEnv.BLOG_TITLE) {
+      Deno.env.set("BLOG_TITLE", originalEnv.BLOG_TITLE);
+    }
+    if (originalEnv.BLOG_COPYRIGHT) {
+      Deno.env.set("BLOG_COPYRIGHT", originalEnv.BLOG_COPYRIGHT);
+    }
+    if (originalEnv.BLOG_POSTS_DIR) {
+      Deno.env.set("BLOG_POSTS_DIR", originalEnv.BLOG_POSTS_DIR);
+    }
   }
 });
 
@@ -30,18 +40,21 @@ Deno.test("getBlogConfig - returns env values when set", () => {
     BLOG_NAME: Deno.env.get("BLOG_NAME"),
     BLOG_TITLE: Deno.env.get("BLOG_TITLE"),
     BLOG_COPYRIGHT: Deno.env.get("BLOG_COPYRIGHT"),
+    BLOG_POSTS_DIR: Deno.env.get("BLOG_POSTS_DIR"),
   };
 
   try {
     Deno.env.set("BLOG_NAME", "Test Blog");
     Deno.env.set("BLOG_TITLE", "Test Title");
     Deno.env.set("BLOG_COPYRIGHT", "Test Copyright");
+    Deno.env.set("BLOG_POSTS_DIR", "/custom/articles");
 
     const config = getBlogConfig();
 
     assertEquals(config.name, "Test Blog");
     assertEquals(config.title, "Test Title");
     assertEquals(config.copyright, "Test Copyright");
+    assertEquals(config.postsDir, "/custom/articles");
   } finally {
     if (originalEnv.BLOG_NAME) {
       Deno.env.set("BLOG_NAME", originalEnv.BLOG_NAME);
@@ -57,6 +70,11 @@ Deno.test("getBlogConfig - returns env values when set", () => {
       Deno.env.set("BLOG_COPYRIGHT", originalEnv.BLOG_COPYRIGHT);
     } else {
       Deno.env.delete("BLOG_COPYRIGHT");
+    }
+    if (originalEnv.BLOG_POSTS_DIR) {
+      Deno.env.set("BLOG_POSTS_DIR", originalEnv.BLOG_POSTS_DIR);
+    } else {
+      Deno.env.delete("BLOG_POSTS_DIR");
     }
   }
 });
@@ -109,6 +127,40 @@ Deno.test("getBlogHeaderTitle - uses default blog name when env not set", () => 
   } finally {
     if (originalEnv) {
       Deno.env.set("BLOG_NAME", originalEnv);
+    }
+  }
+});
+
+Deno.test("getBlogConfig - uses default posts directory when BLOG_POSTS_DIR not set", () => {
+  const originalEnv = Deno.env.get("BLOG_POSTS_DIR");
+
+  try {
+    Deno.env.delete("BLOG_POSTS_DIR");
+
+    const config = getBlogConfig();
+
+    assertEquals(config.postsDir, "./posts");
+  } finally {
+    if (originalEnv) {
+      Deno.env.set("BLOG_POSTS_DIR", originalEnv);
+    }
+  }
+});
+
+Deno.test("getBlogConfig - uses custom posts directory when BLOG_POSTS_DIR is set", () => {
+  const originalEnv = Deno.env.get("BLOG_POSTS_DIR");
+
+  try {
+    Deno.env.set("BLOG_POSTS_DIR", "/var/blog/content");
+
+    const config = getBlogConfig();
+
+    assertEquals(config.postsDir, "/var/blog/content");
+  } finally {
+    if (originalEnv) {
+      Deno.env.set("BLOG_POSTS_DIR", originalEnv);
+    } else {
+      Deno.env.delete("BLOG_POSTS_DIR");
     }
   }
 });
