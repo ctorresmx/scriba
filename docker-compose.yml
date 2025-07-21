@@ -1,0 +1,23 @@
+version: "3.8"
+
+services:
+  scriba:
+    build: .
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./posts:/app/posts:ro
+    environment:
+      BLOG_NAME: "Scriba Dockerized"
+      BLOG_TITLE: "Scriba Dockerized"
+      BLOG_COPYRIGHT: "Scriba Dockerized"
+      BLOG_POSTS_DIR: "/app/posts"
+      BLOG_FAVICON_TEXT: "Scr"
+      PORT: 8000
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
