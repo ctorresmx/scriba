@@ -7,6 +7,7 @@ Deno.test("getBlogConfig - returns default values when env vars are not set", ()
     BLOG_TITLE: Deno.env.get("BLOG_TITLE"),
     BLOG_COPYRIGHT: Deno.env.get("BLOG_COPYRIGHT"),
     BLOG_POSTS_DIR: Deno.env.get("BLOG_POSTS_DIR"),
+    BLOG_FAVICON_TEXT: Deno.env.get("BLOG_FAVICON_TEXT"),
   };
 
   try {
@@ -14,6 +15,7 @@ Deno.test("getBlogConfig - returns default values when env vars are not set", ()
     Deno.env.delete("BLOG_TITLE");
     Deno.env.delete("BLOG_COPYRIGHT");
     Deno.env.delete("BLOG_POSTS_DIR");
+    Deno.env.delete("BLOG_FAVICON_TEXT");
 
     const config = getBlogConfig();
 
@@ -21,6 +23,7 @@ Deno.test("getBlogConfig - returns default values when env vars are not set", ()
     assertEquals(config.title, "Scriba");
     assertEquals(config.copyright, "Scriba");
     assertEquals(config.postsDir, "./posts");
+    assertEquals(config.faviconText, "Scr");
   } finally {
     if (originalEnv.BLOG_NAME) Deno.env.set("BLOG_NAME", originalEnv.BLOG_NAME);
     if (originalEnv.BLOG_TITLE) {
@@ -32,6 +35,9 @@ Deno.test("getBlogConfig - returns default values when env vars are not set", ()
     if (originalEnv.BLOG_POSTS_DIR) {
       Deno.env.set("BLOG_POSTS_DIR", originalEnv.BLOG_POSTS_DIR);
     }
+    if (originalEnv.BLOG_FAVICON_TEXT) {
+      Deno.env.set("BLOG_FAVICON_TEXT", originalEnv.BLOG_FAVICON_TEXT);
+    }
   }
 });
 
@@ -41,6 +47,7 @@ Deno.test("getBlogConfig - returns env values when set", () => {
     BLOG_TITLE: Deno.env.get("BLOG_TITLE"),
     BLOG_COPYRIGHT: Deno.env.get("BLOG_COPYRIGHT"),
     BLOG_POSTS_DIR: Deno.env.get("BLOG_POSTS_DIR"),
+    BLOG_FAVICON_TEXT: Deno.env.get("BLOG_FAVICON_TEXT"),
   };
 
   try {
@@ -48,6 +55,7 @@ Deno.test("getBlogConfig - returns env values when set", () => {
     Deno.env.set("BLOG_TITLE", "Test Title");
     Deno.env.set("BLOG_COPYRIGHT", "Test Copyright");
     Deno.env.set("BLOG_POSTS_DIR", "/custom/articles");
+    Deno.env.set("BLOG_FAVICON_TEXT", "TB");
 
     const config = getBlogConfig();
 
@@ -55,6 +63,7 @@ Deno.test("getBlogConfig - returns env values when set", () => {
     assertEquals(config.title, "Test Title");
     assertEquals(config.copyright, "Test Copyright");
     assertEquals(config.postsDir, "/custom/articles");
+    assertEquals(config.faviconText, "TB");
   } finally {
     if (originalEnv.BLOG_NAME) {
       Deno.env.set("BLOG_NAME", originalEnv.BLOG_NAME);
@@ -75,6 +84,11 @@ Deno.test("getBlogConfig - returns env values when set", () => {
       Deno.env.set("BLOG_POSTS_DIR", originalEnv.BLOG_POSTS_DIR);
     } else {
       Deno.env.delete("BLOG_POSTS_DIR");
+    }
+    if (originalEnv.BLOG_FAVICON_TEXT) {
+      Deno.env.set("BLOG_FAVICON_TEXT", originalEnv.BLOG_FAVICON_TEXT);
+    } else {
+      Deno.env.delete("BLOG_FAVICON_TEXT");
     }
   }
 });
@@ -161,6 +175,40 @@ Deno.test("getBlogConfig - uses custom posts directory when BLOG_POSTS_DIR is se
       Deno.env.set("BLOG_POSTS_DIR", originalEnv);
     } else {
       Deno.env.delete("BLOG_POSTS_DIR");
+    }
+  }
+});
+
+Deno.test("getBlogConfig - uses default favicon text when BLOG_FAVICON_TEXT not set", () => {
+  const originalEnv = Deno.env.get("BLOG_FAVICON_TEXT");
+
+  try {
+    Deno.env.delete("BLOG_FAVICON_TEXT");
+
+    const config = getBlogConfig();
+
+    assertEquals(config.faviconText, "Scr");
+  } finally {
+    if (originalEnv) {
+      Deno.env.set("BLOG_FAVICON_TEXT", originalEnv);
+    }
+  }
+});
+
+Deno.test("getBlogConfig - uses custom favicon text when BLOG_FAVICON_TEXT is set", () => {
+  const originalEnv = Deno.env.get("BLOG_FAVICON_TEXT");
+
+  try {
+    Deno.env.set("BLOG_FAVICON_TEXT", "MB");
+
+    const config = getBlogConfig();
+
+    assertEquals(config.faviconText, "MB");
+  } finally {
+    if (originalEnv) {
+      Deno.env.set("BLOG_FAVICON_TEXT", originalEnv);
+    } else {
+      Deno.env.delete("BLOG_FAVICON_TEXT");
     }
   }
 });

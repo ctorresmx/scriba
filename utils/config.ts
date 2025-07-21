@@ -14,5 +14,6 @@ export function getBlogConfig(): BlogConfig {
     title: Deno.env.get("BLOG_TITLE") || "Scriba",
     copyright: Deno.env.get("BLOG_COPYRIGHT") || "Scriba",
     postsDir: Deno.env.get("BLOG_POSTS_DIR") || "./posts",
+    faviconText: Deno.env.get("BLOG_FAVICON_TEXT") || "Scr",
   };
 }
