@@ -20,4 +20,5 @@ export interface BlogConfig {
   title: string;
   copyright: string;
   postsDir: string;
+  faviconText: string;
 }
