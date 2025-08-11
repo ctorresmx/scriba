@@ -1,4 +1,4 @@
-# Build stage - use Debian-based image for better compatibility with native modules
+# Build stage
 FROM denoland/deno:2.4.2 AS builder
 
 # Set working directory
