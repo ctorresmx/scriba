@@ -201,43 +201,104 @@ Scriba will find posts in any subdirectory within `posts/`.
 3. **Write in Markdown** - Keep formatting simple and portable
 4. **Test locally** - Use `deno task start` to preview before publishing
 
-## Real Example
+## Complete Example
 
-Here's a complete example from an actual Scriba blog:
+Here's a complete example showing all frontmatter fields and markdown features:
 
 ```markdown
 ---
-title: "Hello, World!"
-date: 2025-07-20
-author: "Carlos"
-tags: ["intro", "personal"]
+title: "Why CSS Grid is Actually Brilliant (And Why You're Probably Using It Wrong)"
+date: 1963-11-23
+author: "The Doctor"
+tags: ["css", "rants", "clara-was-right", "web-design"]
 status: "published"
+excerpt: "A passionate defense of CSS Grid from someone who's seen the universe"
 ---
 
-# Who is Carlos?
+# Why CSS Grid is Actually Brilliant (And Why You're Probably Using It Wrong)
 
-I'm a senior software engineer with 10 years of experience, and I've spent most
-of my career as a backend and distributed systems engineer. Currently, I'm
-working at Block where I focus on building the platforms that power our customer
-support tooling.
+Right, listen. I need to talk to you about CSS Grid, and I'm going to need you to pay attention because this is important. More important than you realize.
 
-## What you might find here
+## The Problem with Humans and Layout Systems
 
-The content will probably be a mix of things. Sometimes I'll write about
-technical deep-dives when I've spent time understanding how something works and
-want to share that journey.
+I've traveled through time and space, seen empires rise and fall, watched civilizations master faster-than-light travel, and yet somehow—*somehow*—humans in the 21st century still think tables are acceptable for page layout. 
 
-You might also find me exploring new technologies or concepts, sharing first
-impressions and what I'm learning as I go.
+**This is not acceptable.**
 
----
+```css
+/* This is wrong. So very, very wrong. */
+.layout-table {
+  display: table;
+  /* Why are you doing this to yourself? */
+}
 
-_This blog is powered by [Scriba](https://github.com/ctorresmx/scriba), built
-with Deno, Fresh, and a lot of markdown files._
+/* This is right. Beautiful. Elegant. */
+.layout-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 2rem;
+  /* See? Simple. Brilliant. */
+}
 ```
 
-This creates a post accessible at `/2025/07/20/hello-world` with proper metadata
-and formatting.
+## Clara Would Understand This
+
+Clara—brilliant Clara—once asked me why web developers make things so complicated. "Just make it work," she said. And she was right. She was always right about the simple things.
+
+CSS Grid **just works**. It's:
+
+1. **Intuitive** - Unlike your flexbox nightmares
+2. **Powerful** - Two-dimensional layouts, imagine that!
+3. **Responsive** - Built for the modern web, not 1995
+
+> "I am and always will be the optimist. The hoper of far-flung hopes and the dreamer of improbable dreams."
+> 
+> CSS Grid makes improbable layouts probable.
+
+## The Technical Bit (Pay Attention)
+
+Here's what CSS Grid can do that your precious Bootstrap cannot:
+
+```css
+.magazine-layout {
+  display: grid;
+  grid-template-areas: 
+    "header header header"
+    "sidebar main aside"
+    "footer footer footer";
+  grid-template-rows: auto 1fr auto;
+  grid-template-columns: 200px 1fr 150px;
+}
+
+.header { grid-area: header; }
+.sidebar { grid-area: sidebar; }
+.main { grid-area: main; }
+.aside { grid-area: aside; }
+.footer { grid-area: footer; }
+```
+
+Look at that. *Look at it.* That's a complete magazine layout in a handful of lines. No clearfixes, no float nightmares, no "why is this div three pixels to the left" debugging sessions at 3 AM.
+
+## Attack Eyebrows and Modern Web Design
+
+People tell me I have attack eyebrows. These eyebrows have seen things. They've seen developers spend hours wrestling with float-based layouts when Grid would solve their problem in minutes.
+
+**Stop making things harder than they need to be.**
+
+## In Conclusion
+
+Use CSS Grid. Learn it properly. Your future self will thank you, and somewhere in time and space, Clara is rolling her eyes at how long it took you to figure this out.
+
+Now, if you'll excuse me, I have a universe to save. Again.
+
+*Shut up.*
+
+---
+
+_This blog runs on [Scriba](https://github.com/ctorresmx/scriba) - simple, elegant, no unnecessary complications. Like CSS Grid._
+```
+
+This creates a post accessible at `/1963/11/23/why-css-grid-is-actually-brilliant-and-why-youre-probably-using-it-wrong` with proper metadata and formatting.
 
 ## Next Steps
 
