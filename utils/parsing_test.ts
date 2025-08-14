@@ -387,7 +387,10 @@ status: "published"
       result.content.includes("![External](https://example.com/external.png)"),
       true,
     );
-    assertEquals(result.content.includes("![Root](../root.png)"), true);
+    assertEquals(
+      result.content.includes("![Root](#blocked-path-traversal)"),
+      true,
+    );
   } finally {
     if (originalEnv) {
       Deno.env.set("BLOG_POSTS_DIR", originalEnv);
@@ -437,6 +440,131 @@ status: "published"
       result.content.includes("![inline](/assets/second.png)"),
       true,
     );
+  } finally {
+    if (originalEnv) {
+      Deno.env.set("BLOG_POSTS_DIR", originalEnv);
+    } else {
+      Deno.env.delete("BLOG_POSTS_DIR");
+    }
+    await Deno.remove(tempDir, { recursive: true });
+  }
+});
+
+Deno.test("parseMarkdownFile - blocks path traversal attacks", async () => {
+  const testContent = `---
+title: "Security Test"
+date: 2025-01-15
+author: "Test Author"
+tags: ["test"]
+status: "published"
+---
+
+![Attack1](./../../config.json)
+![Attack2](./../../etc/passwd)
+![Attack3](./..\\\\..\\\\windows)
+![Attack4](../../../etc/passwd)
+![Attack5](file:///etc/passwd)
+![Attack6](\\\\server\\share\\file.jpg)
+![Valid URL](https://example.com/image.png)
+![Valid Absolute](/static/image.png)`;
+
+  const tempDir = await Deno.makeTempDir();
+  const originalEnv = Deno.env.get("BLOG_POSTS_DIR");
+
+  try {
+    Deno.env.set("BLOG_POSTS_DIR", tempDir);
+
+    const tempFile = `${tempDir}/test-post.md`;
+    await Deno.writeTextFile(tempFile, testContent);
+
+    const result = await parseMarkdownFile(tempFile);
+
+    // Check that path traversal attempts are blocked
+    assertEquals(
+      result.content.includes("![Attack1](#blocked-path-traversal)"),
+      true,
+    );
+    assertEquals(
+      result.content.includes("![Attack2](#blocked-path-traversal)"),
+      true,
+    );
+    assertEquals(
+      result.content.includes("![Attack3](#blocked-path-traversal)"),
+      true,
+    );
+    assertEquals(
+      result.content.includes("![Attack4](#blocked-path-traversal)"),
+      true,
+    );
+
+    // Check that unsafe protocols are blocked
+    assertEquals(
+      result.content.includes("![Attack5](#blocked-unsafe-protocol)"),
+      true,
+    );
+    assertEquals(
+      result.content.includes("![Attack6](#blocked-unsafe-protocol)"),
+      true,
+    );
+
+    // Check that valid URLs and absolute paths are preserved
+    assertEquals(
+      result.content.includes("![Valid URL](https://example.com/image.png)"),
+      true,
+    );
+    assertEquals(
+      result.content.includes("![Valid Absolute](/static/image.png)"),
+      true,
+    );
+
+    // Ensure no actual paths are generated for malicious content that was processed
+    assertEquals(result.content.includes("/assets/../"), false);
+    assertEquals(result.content.includes("/assets/../../etc/passwd"), false);
+  } finally {
+    if (originalEnv) {
+      Deno.env.set("BLOG_POSTS_DIR", originalEnv);
+    } else {
+      Deno.env.delete("BLOG_POSTS_DIR");
+    }
+    await Deno.remove(tempDir, { recursive: true });
+  }
+});
+
+Deno.test("parseMarkdownFile - allows legitimate paths within posts directory", async () => {
+  const testContent = `---
+title: "Legitimate Test"
+date: 2025-01-15
+author: "Test Author"
+tags: ["test"]
+status: "published"
+---
+
+![Legitimate](./images/screenshot.png)
+![Also Legitimate](images/screenshot2.png)`;
+
+  const tempDir = await Deno.makeTempDir();
+  const originalEnv = Deno.env.get("BLOG_POSTS_DIR");
+
+  try {
+    Deno.env.set("BLOG_POSTS_DIR", tempDir);
+
+    const tempFile = `${tempDir}/test-post.md`;
+    await Deno.writeTextFile(tempFile, testContent);
+
+    const result = await parseMarkdownFile(tempFile);
+
+    // Legitimate paths should be processed normally (both with and without ./ prefix)
+    assertEquals(
+      result.content.includes("![Legitimate](/assets/images/screenshot.png)"),
+      true,
+    );
+    assertEquals(
+      result.content.includes(
+        "![Also Legitimate](/assets/images/screenshot2.png)",
+      ),
+      true,
+    );
+    assertEquals(result.content.includes("#blocked"), false);
   } finally {
     if (originalEnv) {
       Deno.env.set("BLOG_POSTS_DIR", originalEnv);
