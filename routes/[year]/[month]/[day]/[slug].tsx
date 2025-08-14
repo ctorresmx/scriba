@@ -46,6 +46,10 @@ export default function ArticlePage({ data }: PageProps<ArticlePageProps>) {
             background-color: #2a323c !important;
             background: #2a323c !important;
           }
+          .markdown-body img {
+            display: block;
+            margin: 0 auto;
+          }
         `}
         </style>
       </Head>

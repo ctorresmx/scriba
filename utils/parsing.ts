@@ -2,6 +2,7 @@ import { walk } from "$std/fs/walk.ts";
 import { ParsedPost, PostAttributes } from "../types/blog.ts";
 import { extract } from "@std/front-matter/yaml";
 import { getBlogConfig } from "./config.ts";
+import { dirname, join, relative } from "$std/path/mod.ts";
 
 export async function getAllPosts(): Promise<ParsedPost[]> {
   const posts: ParsedPost[] = [];
@@ -37,10 +38,11 @@ export async function parseMarkdownFile(filepath: string): Promise<ParsedPost> {
     const slug = generateSlug(attrs.title);
     const url = generateUrl(attrs.date, slug);
     const formattedDate = formatDate(attrs.date);
+    const processedContent = processImagePaths(body, filepath);
 
     return {
       attributes: attrs,
-      content: body,
+      content: processedContent,
       slug: slug,
       url: url,
       formattedDate: formattedDate,
@@ -70,4 +72,17 @@ export function formatDate(date: Date): string {
   const day = String(date.getUTCDate()).padStart(2, "0");
 
   return `${year}/${month}/${day}`;
+}
+
+function processImagePaths(content: string, filepath: string): string {
+  const { postsDir } = getBlogConfig();
+  const postDir = dirname(filepath);
+
+  return content.replace(
+    /!\[([^\]]*)\]\(\.\/([^)]+)\)/g,
+    (_match, alt, imagePath) => {
+      const relativeToPostsDir = relative(postsDir, join(postDir, imagePath));
+      return `![${alt}](/assets/${relativeToPostsDir})`;
+    },
+  );
 }
