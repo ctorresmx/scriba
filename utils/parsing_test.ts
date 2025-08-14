@@ -261,3 +261,316 @@ Deno.test("formatDate - all months", () => {
   assertEquals(formatDate(new Date("2025-11-15")), "2025/11/15");
   assertEquals(formatDate(new Date("2025-12-15")), "2025/12/15");
 });
+
+Deno.test("parseMarkdownFile - processes image paths correctly", async () => {
+  const testContent = `---
+title: "Test Post with Images"
+date: 2025-01-15
+author: "Test Author"
+tags: ["test", "images"]
+status: "published"
+---
+
+# Test Content
+
+Here's an image: ![Alt text](./subfolder/image.png)
+
+And another: ![Another image](./test.jpg)
+
+Regular link should not change: [Link](./page.html)`;
+
+  const tempDir = await Deno.makeTempDir();
+  const originalEnv = Deno.env.get("BLOG_POSTS_DIR");
+
+  try {
+    Deno.env.set("BLOG_POSTS_DIR", tempDir);
+
+    const tempFile = `${tempDir}/test-post.md`;
+    await Deno.writeTextFile(tempFile, testContent);
+
+    const result = await parseMarkdownFile(tempFile);
+
+    // Check that image paths are transformed
+    assertEquals(
+      result.content.includes("![Alt text](/assets/subfolder/image.png)"),
+      true,
+    );
+    assertEquals(
+      result.content.includes("![Another image](/assets/test.jpg)"),
+      true,
+    );
+
+    // Check that non-image links are not affected
+    assertEquals(result.content.includes("[Link](./page.html)"), true);
+  } finally {
+    if (originalEnv) {
+      Deno.env.set("BLOG_POSTS_DIR", originalEnv);
+    } else {
+      Deno.env.delete("BLOG_POSTS_DIR");
+    }
+    await Deno.remove(tempDir, { recursive: true });
+  }
+});
+
+Deno.test("parseMarkdownFile - handles nested directory image paths", async () => {
+  const testContent = `---
+title: "Nested Images Test"
+date: 2025-01-15
+author: "Test Author"
+tags: ["test"]
+status: "published"
+---
+
+![Image](./images/nested/deep.png)`;
+
+  const tempDir = await Deno.makeTempDir();
+  const originalEnv = Deno.env.get("BLOG_POSTS_DIR");
+
+  try {
+    Deno.env.set("BLOG_POSTS_DIR", tempDir);
+
+    await Deno.mkdir(`${tempDir}/subdir`, { recursive: true });
+    const tempFile = `${tempDir}/subdir/test-post.md`;
+    await Deno.writeTextFile(tempFile, testContent);
+
+    const result = await parseMarkdownFile(tempFile);
+
+    // Image path should be relative to posts directory
+    assertEquals(
+      result.content.includes(
+        "![Image](/assets/subdir/images/nested/deep.png)",
+      ),
+      true,
+    );
+  } finally {
+    if (originalEnv) {
+      Deno.env.set("BLOG_POSTS_DIR", originalEnv);
+    } else {
+      Deno.env.delete("BLOG_POSTS_DIR");
+    }
+    await Deno.remove(tempDir, { recursive: true });
+  }
+});
+
+Deno.test("parseMarkdownFile - ignores absolute and external image URLs", async () => {
+  const testContent = `---
+title: "Mixed Images Test"
+date: 2025-01-15
+author: "Test Author"
+tags: ["test"]
+status: "published"
+---
+
+![Local](./local.png)
+![Absolute](/static/absolute.png)
+![External](https://example.com/external.png)
+![Root](../root.png)`;
+
+  const tempDir = await Deno.makeTempDir();
+  const originalEnv = Deno.env.get("BLOG_POSTS_DIR");
+
+  try {
+    Deno.env.set("BLOG_POSTS_DIR", tempDir);
+
+    const tempFile = `${tempDir}/test-post.md`;
+    await Deno.writeTextFile(tempFile, testContent);
+
+    const result = await parseMarkdownFile(tempFile);
+
+    // Only relative paths starting with ./ should be transformed
+    assertEquals(result.content.includes("![Local](/assets/local.png)"), true);
+    assertEquals(
+      result.content.includes("![Absolute](/static/absolute.png)"),
+      true,
+    );
+    assertEquals(
+      result.content.includes("![External](https://example.com/external.png)"),
+      true,
+    );
+    assertEquals(
+      result.content.includes("![Root](#blocked-path-traversal)"),
+      true,
+    );
+  } finally {
+    if (originalEnv) {
+      Deno.env.set("BLOG_POSTS_DIR", originalEnv);
+    } else {
+      Deno.env.delete("BLOG_POSTS_DIR");
+    }
+    await Deno.remove(tempDir, { recursive: true });
+  }
+});
+
+Deno.test("parseMarkdownFile - handles edge cases in image processing", async () => {
+  const testContent = `---
+title: "Edge Cases Test"
+date: 2025-01-15
+author: "Test Author"
+tags: ["test"]
+status: "published"
+---
+
+![](./empty-alt.png)
+![Complex alt text with "quotes" and special chars!](./complex.png)
+![Multiple images](./first.png) and ![inline](./second.png) in same paragraph`;
+
+  const tempDir = await Deno.makeTempDir();
+  const originalEnv = Deno.env.get("BLOG_POSTS_DIR");
+
+  try {
+    Deno.env.set("BLOG_POSTS_DIR", tempDir);
+
+    const tempFile = `${tempDir}/test-post.md`;
+    await Deno.writeTextFile(tempFile, testContent);
+
+    const result = await parseMarkdownFile(tempFile);
+
+    assertEquals(result.content.includes("![](/assets/empty-alt.png)"), true);
+    assertEquals(
+      result.content.includes(
+        '![Complex alt text with "quotes" and special chars!](/assets/complex.png)',
+      ),
+      true,
+    );
+    assertEquals(
+      result.content.includes("![Multiple images](/assets/first.png)"),
+      true,
+    );
+    assertEquals(
+      result.content.includes("![inline](/assets/second.png)"),
+      true,
+    );
+  } finally {
+    if (originalEnv) {
+      Deno.env.set("BLOG_POSTS_DIR", originalEnv);
+    } else {
+      Deno.env.delete("BLOG_POSTS_DIR");
+    }
+    await Deno.remove(tempDir, { recursive: true });
+  }
+});
+
+Deno.test("parseMarkdownFile - blocks path traversal attacks", async () => {
+  const testContent = `---
+title: "Security Test"
+date: 2025-01-15
+author: "Test Author"
+tags: ["test"]
+status: "published"
+---
+
+![Attack1](./../../config.json)
+![Attack2](./../../etc/passwd)
+![Attack3](./..\\\\..\\\\windows)
+![Attack4](../../../etc/passwd)
+![Attack5](file:///etc/passwd)
+![Attack6](\\\\server\\share\\file.jpg)
+![Valid URL](https://example.com/image.png)
+![Valid Absolute](/static/image.png)`;
+
+  const tempDir = await Deno.makeTempDir();
+  const originalEnv = Deno.env.get("BLOG_POSTS_DIR");
+
+  try {
+    Deno.env.set("BLOG_POSTS_DIR", tempDir);
+
+    const tempFile = `${tempDir}/test-post.md`;
+    await Deno.writeTextFile(tempFile, testContent);
+
+    const result = await parseMarkdownFile(tempFile);
+
+    // Check that path traversal attempts are blocked
+    assertEquals(
+      result.content.includes("![Attack1](#blocked-path-traversal)"),
+      true,
+    );
+    assertEquals(
+      result.content.includes("![Attack2](#blocked-path-traversal)"),
+      true,
+    );
+    assertEquals(
+      result.content.includes("![Attack3](#blocked-path-traversal)"),
+      true,
+    );
+    assertEquals(
+      result.content.includes("![Attack4](#blocked-path-traversal)"),
+      true,
+    );
+
+    // Check that unsafe protocols are blocked
+    assertEquals(
+      result.content.includes("![Attack5](#blocked-unsafe-protocol)"),
+      true,
+    );
+    assertEquals(
+      result.content.includes("![Attack6](#blocked-unsafe-protocol)"),
+      true,
+    );
+
+    // Check that valid URLs and absolute paths are preserved
+    assertEquals(
+      result.content.includes("![Valid URL](https://example.com/image.png)"),
+      true,
+    );
+    assertEquals(
+      result.content.includes("![Valid Absolute](/static/image.png)"),
+      true,
+    );
+
+    // Ensure no actual paths are generated for malicious content that was processed
+    assertEquals(result.content.includes("/assets/../"), false);
+    assertEquals(result.content.includes("/assets/../../etc/passwd"), false);
+  } finally {
+    if (originalEnv) {
+      Deno.env.set("BLOG_POSTS_DIR", originalEnv);
+    } else {
+      Deno.env.delete("BLOG_POSTS_DIR");
+    }
+    await Deno.remove(tempDir, { recursive: true });
+  }
+});
+
+Deno.test("parseMarkdownFile - allows legitimate paths within posts directory", async () => {
+  const testContent = `---
+title: "Legitimate Test"
+date: 2025-01-15
+author: "Test Author"
+tags: ["test"]
+status: "published"
+---
+
+![Legitimate](./images/screenshot.png)
+![Also Legitimate](images/screenshot2.png)`;
+
+  const tempDir = await Deno.makeTempDir();
+  const originalEnv = Deno.env.get("BLOG_POSTS_DIR");
+
+  try {
+    Deno.env.set("BLOG_POSTS_DIR", tempDir);
+
+    const tempFile = `${tempDir}/test-post.md`;
+    await Deno.writeTextFile(tempFile, testContent);
+
+    const result = await parseMarkdownFile(tempFile);
+
+    // Legitimate paths should be processed normally (both with and without ./ prefix)
+    assertEquals(
+      result.content.includes("![Legitimate](/assets/images/screenshot.png)"),
+      true,
+    );
+    assertEquals(
+      result.content.includes(
+        "![Also Legitimate](/assets/images/screenshot2.png)",
+      ),
+      true,
+    );
+    assertEquals(result.content.includes("#blocked"), false);
+  } finally {
+    if (originalEnv) {
+      Deno.env.set("BLOG_POSTS_DIR", originalEnv);
+    } else {
+      Deno.env.delete("BLOG_POSTS_DIR");
+    }
+    await Deno.remove(tempDir, { recursive: true });
+  }
+});

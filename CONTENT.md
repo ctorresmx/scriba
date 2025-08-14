@@ -143,11 +143,31 @@ fn main() {
 
 ### Images
 
-Place images in the `static/` directory and reference them:
+Place images alongside your posts in the `posts/` directory and reference them
+with relative paths:
 
 ```markdown
-![Alt text](/image.png) ![Alt text](/images/screenshot.jpg)
+![Alt text](./tutorial-assets/image.png)
+![Screenshot](./tutorial-assets/screenshot.png)
+![Diagram](./tutorial-assets/diagram.jpg)
 ```
+
+This approach keeps images organized with their related posts and works
+seamlessly with Docker volume mounts.
+
+**Example directory structure:**
+
+```
+posts/
+├── 2025-01-15-tutorial.md
+├── tutorial-assets/
+│   ├── screenshot.png
+│   └── diagram.jpg
+└── 2025-02-01-review.md
+```
+
+Images are automatically centered in blog posts for a clean, consistent
+appearance.
 
 ## Content Organization
 

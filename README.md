@@ -12,6 +12,8 @@ deploy with Docker. No databases, no admin panels, no complexity.
 ## Key Features
 
 - **Markdown-first**: Write posts in plain Markdown with frontmatter metadata
+- **Dynamic images**: Images stored alongside posts, perfect for Docker
+  workflows
 - **Git-based workflow**: Version control your content alongside your code
 - **Docker deployment**: Deploy anywhere containers run
 - **Fast & lightweight**: Server-side rendering with minimal JavaScript
