@@ -26,9 +26,9 @@ pub struct ParsedPost {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct BlogConfig {
-    name: String,
-    title: String,
-    copyright: String,
-    posts_dir: String,
-    favicon_text: String,
+    pub name: String,
+    pub title: String,
+    pub copyright: String,
+    pub posts_dir: String,
+    pub favicon_text: String,
 }
