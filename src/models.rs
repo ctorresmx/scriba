@@ -1,11 +1,11 @@
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct PostAttributes {
-    title: String,
-    date: chrono::DateTime<chrono::Utc>,
-    author: String,
-    tags: Vec<String>,
-    status: PostStatus,
-    excerpt: Option<String>,
+    pub title: String,
+    pub date: chrono::DateTime<chrono::Utc>,
+    pub author: String,
+    pub tags: Vec<String>,
+    pub status: PostStatus,
+    pub excerpt: Option<String>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -17,11 +17,11 @@ pub enum PostStatus {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ParsedPost {
-    attributes: PostAttributes,
-    content: String,
-    slug: String,
-    url: String,            // Generated URL like YYYY/MM/DD slug
-    formatted_date: String, // Formatted date like YYYY/MM/DD
+    pub attributes: PostAttributes,
+    pub content: String,
+    pub slug: String,
+    pub url: String,            // Generated URL like YYYY/MM/DD slug
+    pub formatted_date: String, // Formatted date like YYYY/MM/DD
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]

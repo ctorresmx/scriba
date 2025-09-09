@@ -43,6 +43,15 @@ No vendor lock-in. No proprietary formats. Just Markdown, Git, and Docker.
 
 ## Quick Start
 
+You need the standalone TailwindCSS CLI to render the CSS file. You can find your specific OS on their [Github repo release page](https://github.com/tailwindlabs/tailwindcss/releases/).
+
+```bash
+# Download the TailwindCSS CLI executable
+curl -sLO https://github.com/tailwindlabs/tailwindcss/releases/latest/download/tailwindcss-macos-arm64
+chmod +x tailwindcss-macos-arm64
+mv tailwindcss-macos-arm64 tailwindcss
+```
+
 ```bash
 # Clone this repository
 git clone https://github.com/ctorresmx/scriba.git my-blog
