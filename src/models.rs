@@ -1,14 +1,17 @@
-#[derive(Debug, Clone, PartialEq, Eq)]
+use serde::Deserialize;
+
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 pub struct PostAttributes {
     pub title: String,
-    pub date: chrono::DateTime<chrono::Utc>,
+    pub date: String,
     pub author: String,
     pub tags: Vec<String>,
     pub status: PostStatus,
     pub excerpt: Option<String>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
+#[serde(rename_all = "lowercase")]
 pub enum PostStatus {
     Draft,
     Published,

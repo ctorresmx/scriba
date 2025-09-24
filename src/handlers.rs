@@ -1,3 +1,4 @@
+use crate::markdown::get_all_posts;
 use crate::models::BlogConfig;
 use crate::templates::IndexTemplate;
 use askama::Template;
@@ -30,11 +31,13 @@ impl From<askama::Error> for AppError {
 }
 
 pub async fn index(State(config): State<BlogConfig>) -> Result<impl IntoResponse, AppError> {
+    let posts = get_all_posts();
+
     let template = IndexTemplate {
         title: config.title.clone(),
         copyright: config.copyright.clone(),
         current_year: chrono::Utc::now().year().to_string(),
-        posts: vec![],
+        posts: posts,
     };
 
     Ok(Html(template.render()?))
