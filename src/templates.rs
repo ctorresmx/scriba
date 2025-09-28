@@ -17,3 +17,12 @@ pub struct IndexTemplate {
     pub current_year: String,
     pub posts: Vec<ParsedPost>,
 }
+
+#[derive(Template)]
+#[template(path = "post.html")]
+pub struct PostTemplate {
+    pub title: String,
+    pub copyright: String,
+    pub current_year: String,
+    pub post: ParsedPost,
+}

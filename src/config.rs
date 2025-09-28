@@ -77,15 +77,19 @@ mod tests {
 
     #[test]
     fn test_get_blog_header_title_with_default_values() {
-        let title = get_blog_header_title(None);
+        temp_env::with_var("BLOG_TITLE", None::<&str>, || {
+            let title = get_blog_header_title(None);
 
-        assert_eq!(title, "Scriba");
+            assert_eq!(title, "Scriba");
+        });
     }
 
     #[test]
     fn test_get_blog_header_title_with_default_env_custom_header() {
-        let title = get_blog_header_title(Some("Contact"));
+        temp_env::with_var("BLOG_TITLE", None::<&str>, || {
+            let title = get_blog_header_title(Some("Contact"));
 
-        assert_eq!(title, "Contact - Scriba");
+            assert_eq!(title, "Contact - Scriba");
+        });
     }
 }

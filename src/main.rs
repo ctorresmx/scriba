@@ -7,13 +7,14 @@ mod markdown;
 mod models;
 mod templates;
 
-use crate::{config::get_blog_config, handlers::index};
+use crate::{config::get_blog_config, handlers::index, handlers::post_page};
 
 #[tokio::main]
 async fn main() {
     let config = get_blog_config();
     let app = Router::new()
         .route("/", get(index))
+        .route("/{year}/{month}/{day}/{slug}", get(post_page))
         .nest_service("/static", ServeDir::new("static"))
         .with_state(config);
 

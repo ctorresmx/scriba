@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block page_title %}{{ title }}{% endblock %}
+
+{% block content %}
+  <article class="max-w-4xl mx-auto px-4 py-8">
+    <header class="mb-8">
+      <h1 class="text-4xl font-bold mb-4">{{ post.attributes.title }}</h1>
+
+      <div class="flex flex-wrap items-center gap-1 text-sm text-base-content/70 mb-4">
+        <span>by {{ post.attributes.author }}</span>
+        <span class="mx-2">•</span>
+        <span>{{ post.formatted_date }}</span>
+      </div>
+
+      <div class="flex flex-wrap gap-2">
+        {% for tag in post.attributes.tags %}
+          <span class="badge badge-outline">
+            {{ tag }}
+          </span>
+        {% endfor %}
+      </div>
+    </header>
+
+    <div data-color-mode="dark" data-dark-theme="dark" class="markdown-body p-6 rounded-lg">
+      {{ post.content | safe }}
+    </div>
+  </article>
+{% endblock %}
