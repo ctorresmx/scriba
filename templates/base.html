@@ -3,7 +3,7 @@
     <head>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>{% block page_title %}{{ title }}{% endblock %}</title>
+        <title>{% block header_title %}{{ header_title }}{% endblock %}</title>
         <link rel="stylesheet" href="/static/rust_styles.css" />
         <link rel="icon" type="image/svg+xml" href="/favicon.ico" />
         {% block extra_head %}{% endblock %}
@@ -17,7 +17,7 @@
                         href="/"
                         class="no-underline hover:no-underline visited:text-current"
                     >
-                        <h1 class="text-2xl primary">{{ title }}</h1>
+                        <h1 class="text-2xl primary">{{ blog_title }}</h1>
                     </a>
                 </div>
                 <div class="navbar-end"></div>

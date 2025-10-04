@@ -1,3 +1,4 @@
+use crate::config::get_blog_header_title;
 use crate::markdown::get_all_posts;
 use crate::models::BlogConfig;
 use crate::templates::{IndexTemplate, PostTemplate};
@@ -34,7 +35,8 @@ pub async fn index(State(config): State<BlogConfig>) -> Result<impl IntoResponse
     let posts = get_all_posts();
 
     let template = IndexTemplate {
-        title: config.title.clone(),
+        header_title: get_blog_header_title(None),
+        blog_title: config.title,
         copyright: config.copyright.clone(),
         current_year: chrono::Utc::now().year().to_string(),
         posts: posts,
@@ -56,7 +58,8 @@ pub async fn post_page(
     match found_post {
         Some(post) => {
             let template = PostTemplate {
-                title: config.title.clone(),
+                header_title: get_blog_header_title(Some(&post.attributes.title)),
+                blog_title: config.title,
                 copyright: config.copyright.clone(),
                 current_year: chrono::Utc::now().year().to_string(),
                 post: post.clone(),
@@ -71,7 +74,7 @@ pub async fn post_page(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::models::{PostAttributes, PostStatus, ParsedPost};
+    use crate::models::{ParsedPost, PostAttributes, PostStatus};
 
     fn create_test_config() -> BlogConfig {
         BlogConfig {
@@ -104,10 +107,15 @@ mod tests {
     async fn test_post_page_returns_404_for_nonexistent_post() {
         // This test verifies that requesting a non-existent post returns 404 instead of panicking
         let config = create_test_config();
-        let path = ("2025".to_string(), "01".to_string(), "15".to_string(), "nonexistent-post".to_string());
-        
+        let path = (
+            "2025".to_string(),
+            "01".to_string(),
+            "15".to_string(),
+            "nonexistent-post".to_string(),
+        );
+
         let result = post_page(axum::extract::State(config), axum::extract::Path(path)).await;
-        
+
         match result {
             Err(AppError::NotFound) => {
                 // This is the expected behavior - should return NotFound error
@@ -139,6 +147,8 @@ mod tests {
         assert!(html.contains("Test content")); // Content
         assert!(html.contains("test")); // Tag
         // Verify the div tag is properly closed (this verifies our HTML syntax fix)
-        assert!(html.contains(r#"<div class="flex flex-wrap items-center gap-1 text-sm text-base-content/70 mb-4">"#));
+        assert!(html.contains(
+            r#"<div class="flex flex-wrap items-center gap-1 text-sm text-base-content/70 mb-4">"#
+        ));
     }
 }

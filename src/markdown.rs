@@ -224,7 +224,10 @@ mod tests {
         assert_eq!(generate_url("", "test-slug"), "//test-slug");
 
         // Test with special characters in slug (should be pre-sanitized)
-        assert_eq!(generate_url("2025/01/15", "test-slug"), "/2025/01/15/test-slug");
+        assert_eq!(
+            generate_url("2025/01/15", "test-slug"),
+            "/2025/01/15/test-slug"
+        );
     }
 
     // Mock test data creation helpers
@@ -252,7 +255,8 @@ This is test content for the post."#,
         use gray_matter::engine::YAML;
 
         let matter = Matter::<YAML>::new();
-        let content = create_test_post_content("Test Post", "2025-01-15", "published", "Test Author");
+        let content =
+            create_test_post_content("Test Post", "2025-01-15", "published", "Test Author");
 
         let parsed = matter.parse::<PostAttributes>(&content).unwrap();
 
@@ -284,7 +288,8 @@ This is test content for the post."#,
         let matter = Matter::<YAML>::new();
 
         // Test published status
-        let published_content = create_test_post_content("Published Post", "2025-01-15", "published", "Author");
+        let published_content =
+            create_test_post_content("Published Post", "2025-01-15", "published", "Author");
         let parsed = matter.parse::<PostAttributes>(&published_content).unwrap();
         assert_eq!(parsed.data.unwrap().status, PostStatus::Published);
 
@@ -294,7 +299,8 @@ This is test content for the post."#,
         assert_eq!(parsed.data.unwrap().status, PostStatus::Draft);
 
         // Test scheduled status
-        let scheduled_content = create_test_post_content("Scheduled Post", "2025-01-15", "scheduled", "Author");
+        let scheduled_content =
+            create_test_post_content("Scheduled Post", "2025-01-15", "scheduled", "Author");
         let parsed = matter.parse::<PostAttributes>(&scheduled_content).unwrap();
         assert_eq!(parsed.data.unwrap().status, PostStatus::Scheduled);
     }
@@ -305,13 +311,22 @@ This is test content for the post."#,
         assert_eq!(generate_slug("iOS 17.1 Update"), "ios-171-update");
 
         // Test with parentheses and brackets
-        assert_eq!(generate_slug("React (Hooks) vs Vue [Composition]"), "react-hooks-vs-vue-composition");
+        assert_eq!(
+            generate_slug("React (Hooks) vs Vue [Composition]"),
+            "react-hooks-vs-vue-composition"
+        );
 
         // Test with quotes and apostrophes
-        assert_eq!(generate_slug("Don't Use 'var' in JavaScript"), "dont-use-var-in-javascript");
+        assert_eq!(
+            generate_slug("Don't Use 'var' in JavaScript"),
+            "dont-use-var-in-javascript"
+        );
 
         // Test with URL-like content
-        assert_eq!(generate_slug("https://example.com/api"), "httpsexamplecomapi");
+        assert_eq!(
+            generate_slug("https://example.com/api"),
+            "httpsexamplecomapi"
+        );
 
         // Test with very long title
         let long_title = "This is a very long title that might be used in a blog post and should be converted to a reasonable slug without issues";

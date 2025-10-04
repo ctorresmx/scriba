@@ -2,17 +2,10 @@ use crate::models::ParsedPost;
 use askama::Template;
 
 #[derive(Template)]
-#[template(path = "base.html")]
-pub struct BaseTemplate {
-    pub title: String,
-    pub copyright: String,
-    pub current_year: String,
-}
-
-#[derive(Template)]
 #[template(path = "index.html")]
 pub struct IndexTemplate {
-    pub title: String,
+    pub header_title: String,
+    pub blog_title: String,
     pub copyright: String,
     pub current_year: String,
     pub posts: Vec<ParsedPost>,
@@ -21,7 +14,8 @@ pub struct IndexTemplate {
 #[derive(Template)]
 #[template(path = "post.html")]
 pub struct PostTemplate {
-    pub title: String,
+    pub header_title: String,
+    pub blog_title: String,
     pub copyright: String,
     pub current_year: String,
     pub post: ParsedPost,
