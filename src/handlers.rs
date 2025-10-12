@@ -1,7 +1,7 @@
 use crate::config::get_blog_header_title;
 use crate::markdown::get_all_posts;
 use crate::models::BlogConfig;
-use crate::templates::{IndexTemplate, PostTemplate};
+use crate::templates::{IndexTemplate, NotFoundTemplate, PostTemplate};
 use askama::Template;
 use axum::extract::{Path, State};
 use axum::http::StatusCode;
@@ -10,6 +10,7 @@ use chrono::Datelike;
 
 #[derive(Debug)]
 pub enum AppError {
+    #[allow(dead_code)]
     NotFound,
     #[allow(dead_code)]
     Render(askama::Error),
@@ -18,10 +19,14 @@ pub enum AppError {
 impl IntoResponse for AppError {
     fn into_response(self) -> axum::response::Response {
         match self {
-            AppError::NotFound => (StatusCode::NOT_FOUND, "Not Found").into_response(),
-            AppError::Render(_) => {
-                (StatusCode::INTERNAL_SERVER_ERROR, "Template render error").into_response()
-            }
+            AppError::NotFound => (
+                StatusCode::NOT_FOUND,
+                Html("<html><head><title>404 - Page not found</title></head><body><h1>404 - Page not found</h1><p>The page you were looking for doesn't exist.</p></body></html>")
+            ).into_response(),
+            AppError::Render(err) => (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Html(format!("<html><head><title>Error</title></head><body><h1>Internal Server Error</h1><p>Template render error: {}</p></body></html>", err))
+            ).into_response(),
         }
     }
 }
@@ -49,7 +54,7 @@ pub async fn index(State(config): State<BlogConfig>) -> Result<impl IntoResponse
 pub async fn post_page(
     State(config): State<BlogConfig>,
     Path((year, month, day, slug)): Path<(String, String, String, String)>,
-) -> Result<impl IntoResponse, AppError> {
+) -> impl IntoResponse {
     let posts = get_all_posts();
 
     let found_post = posts.iter().find(|entry| {
@@ -60,15 +65,34 @@ pub async fn post_page(
         Some(post) => {
             let template = PostTemplate {
                 header_title: get_blog_header_title(Some(&post.attributes.title)),
-                blog_title: config.title,
+                blog_title: config.title.clone(),
                 copyright: config.copyright.clone(),
                 current_year: chrono::Utc::now().year().to_string(),
                 post: post.clone(),
             };
 
-            Ok(Html(template.render()?))
+            match template.render() {
+                Ok(html) => (StatusCode::OK, Html(html)).into_response(),
+                Err(_) => (
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    Html("<html><body><h1>Error rendering template</h1></body></html>".to_string())
+                ).into_response(),
+            }
         }
-        None => Err(AppError::NotFound),
+        None => {
+            let template = NotFoundTemplate {
+                header_title: "404 - Page not found".to_string(),
+                blog_title: config.title,
+                copyright: config.copyright.clone(),
+                current_year: chrono::Utc::now().year().to_string(),
+            };
+
+            let html = template.render().unwrap_or_else(|_| {
+                "<!DOCTYPE html><html><body><h1>404 - Page not found</h1></body></html>".to_string()
+            });
+
+            (StatusCode::NOT_FOUND, Html(html)).into_response()
+        }
     }
 }
 
@@ -91,6 +115,21 @@ pub async fn favicon(State(config): State<BlogConfig>) -> impl IntoResponse {
         ],
         svg_body,
     )
+}
+
+pub async fn not_found_handler(State(config): State<BlogConfig>) -> impl IntoResponse {
+    let template = NotFoundTemplate {
+        header_title: "404 - Page not found".to_string(),
+        blog_title: config.title,
+        copyright: config.copyright.clone(),
+        current_year: chrono::Utc::now().year().to_string(),
+    };
+
+    let html = template.render().unwrap_or_else(|_| {
+        "<!DOCTYPE html><html><body><h1>404 - Page not found</h1></body></html>".to_string()
+    });
+
+    (StatusCode::NOT_FOUND, Html(html))
 }
 
 #[cfg(test)]
@@ -127,7 +166,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_post_page_returns_404_for_nonexistent_post() {
-        // This test verifies that requesting a non-existent post returns 404 instead of panicking
+        // This test verifies that requesting a non-existent post returns 404 with styled template
         let config = create_test_config();
         let path = (
             "2025".to_string(),
@@ -136,15 +175,20 @@ mod tests {
             "nonexistent-post".to_string(),
         );
 
-        let result = post_page(axum::extract::State(config), axum::extract::Path(path)).await;
+        let response = post_page(axum::extract::State(config), axum::extract::Path(path)).await;
+        let response = response.into_response();
 
-        match result {
-            Err(AppError::NotFound) => {
-                // This is the expected behavior - should return NotFound error
-            }
-            Ok(_) => panic!("Expected NotFound error, but got success"),
-            Err(other) => panic!("Expected NotFound error, but got: {:?}", other),
-        }
+        // Verify 404 status code
+        assert_eq!(response.status(), StatusCode::NOT_FOUND);
+
+        // Verify the response body contains the 404 template elements
+        let body = axum::body::to_bytes(response.into_body(), usize::MAX).await.unwrap();
+        let html = String::from_utf8(body.to_vec()).unwrap();
+
+        // Should contain navbar, footer, and 404 message from template
+        assert!(html.contains("404 - Page not found"));
+        assert!(html.contains("Test Title")); // Blog title in navbar
+        assert!(html.contains("Test Copyright")); // Footer copyright
     }
 
     #[test]

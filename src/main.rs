@@ -7,7 +7,10 @@ mod markdown;
 mod models;
 mod templates;
 
-use crate::{config::get_blog_config, handlers::favicon, handlers::index, handlers::post_page};
+use crate::{
+    config::get_blog_config,
+    handlers::{favicon, index, not_found_handler, post_page},
+};
 
 #[tokio::main]
 async fn main() {
@@ -17,6 +20,7 @@ async fn main() {
         .route("/{year}/{month}/{day}/{slug}", get(post_page))
         .route("/favicon.ico", get(favicon))
         .nest_service("/static", ServeDir::new("static"))
+        .fallback(not_found_handler)
         .with_state(config);
 
     let listener = tokio::net::TcpListener::bind("0.0.0.0:8000").await.unwrap();
