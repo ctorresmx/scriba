@@ -11,6 +11,7 @@ use chrono::Datelike;
 #[derive(Debug)]
 pub enum AppError {
     NotFound,
+    #[allow(dead_code)]
     Render(askama::Error),
 }
 
@@ -130,7 +131,8 @@ mod tests {
         // This test verifies that the PostTemplate can render without syntax errors
         let post = create_test_post();
         let template = PostTemplate {
-            title: "Test Blog".to_string(),
+            header_title: "Test Blog".to_string(),
+            blog_title: "Test Blog".to_string(),
             copyright: "Test Copyright".to_string(),
             current_year: "2025".to_string(),
             post: post,

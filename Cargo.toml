@@ -14,6 +14,8 @@ tokio = { version = "1.47.1", features = ["full"] }
 tower-http = { version = "0.6.6", features = ["fs"] }
 gray_matter = "0.3.2"
 pulldown-cmark = "0.13.0"
+syntect = "5.2.0"
+html-escape = "0.2.13"
 
 [dev-dependencies]
 temp-env = "0.3.6"

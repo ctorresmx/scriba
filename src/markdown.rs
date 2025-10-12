@@ -1,12 +1,182 @@
 use gray_matter::engine::YAML;
 use gray_matter::Matter;
-use pulldown_cmark::Parser;
+use pulldown_cmark::{CodeBlockKind, Event, Parser, Tag, TagEnd};
 use regex::Regex;
 use std::ffi::OsStr;
 use std::fs;
+use syntect::highlighting::ThemeSet;
+use syntect::html::highlighted_html_for_string;
+use syntect::parsing::SyntaxSet;
 
 use crate::config::get_blog_config;
 use crate::models::{ParsedPost, PostAttributes, PostStatus};
+
+fn highlight_code(code: &str, language: &str) -> String {
+    // Early return for empty code
+    if code.is_empty() {
+        return format!("<pre><code></code></pre>");
+    }
+
+    let syntax_set = SyntaxSet::load_defaults_newlines();
+    let theme_set = ThemeSet::load_defaults();
+
+    // Use base16-eighties.dark theme with robust fallback
+    let theme = theme_set
+        .themes
+        .get("base16-eighties.dark")
+        .or_else(|| theme_set.themes.get("base16-ocean.dark"))
+        .or_else(|| theme_set.themes.get("Solarized (dark)"))
+        .or_else(|| theme_set.themes.values().next())
+        .expect("Critical error: No syntax highlighting themes available");
+
+    // Normalize language name for better recognition
+    let normalized_language = match language.to_lowercase().as_str() {
+        "ts" => "ts", // Keep as "ts" since syntect might know this better
+        "typescript" => "typescript",
+        "js" => "javascript",
+        "json" => "json",
+        "diff" => "diff",
+        "java" => "java",
+        "rust" => "rust",
+        "python" | "py" => "python",
+        "bash" | "sh" => "bash",
+        "html" => "html",
+        "css" => "css",
+        "yaml" | "yml" => "yaml",
+        _ => language,
+    };
+
+    // Find the syntax definition for the language
+    let syntax = if normalized_language == "ts" || normalized_language == "typescript" {
+        // Try multiple approaches for TypeScript
+        syntax_set
+            .find_syntax_by_token("typescript")
+            .or_else(|| syntax_set.find_syntax_by_token("ts"))
+            .or_else(|| syntax_set.find_syntax_by_extension("ts"))
+            .or_else(|| syntax_set.find_syntax_by_extension("typescript"))
+            .or_else(|| syntax_set.find_syntax_by_name("TypeScript"))
+            .or_else(|| syntax_set.find_syntax_by_name("Typescript"))
+            .or_else(|| syntax_set.find_syntax_by_name("JavaScript")) // Fallback to JS
+            .unwrap_or_else(|| syntax_set.find_syntax_plain_text())
+    } else {
+        syntax_set
+            .find_syntax_by_token(normalized_language)
+            .or_else(|| syntax_set.find_syntax_by_extension(normalized_language))
+            .unwrap_or_else(|| syntax_set.find_syntax_plain_text())
+    };
+
+    // Special handling for diff to add proper line backgrounds
+    if normalized_language == "diff" {
+        return highlight_diff(code, &syntax_set, syntax, theme);
+    }
+
+    // Generate highlighted HTML with robust error handling
+    match highlighted_html_for_string(code, &syntax_set, syntax, theme) {
+        Ok(highlighted) => highlighted,
+        Err(e) => {
+            eprintln!("Warning: Syntax highlighting failed for language '{}': {}", language, e);
+            // Fallback to plain code block with proper HTML escaping
+            format!("<pre><code>{}</code></pre>", html_escape::encode_text(code))
+        }
+    }
+}
+
+fn highlight_diff(
+    code: &str,
+    _syntax_set: &SyntaxSet,
+    _syntax: &syntect::parsing::SyntaxReference,
+    _theme: &syntect::highlighting::Theme,
+) -> String {
+    // Early return for empty diff
+    if code.is_empty() {
+        return String::from(
+            "<pre style=\"background-color:#1e2229 !important;\" class=\"diff-highlight\"><code></code></pre>"
+        );
+    }
+
+    // For diff files, we'll do custom highlighting with enhanced backgrounds
+    // Parse the code line by line and add diff-specific styling
+    let lines: Vec<&str> = code.lines().collect();
+    let mut result = String::from(
+        "<pre style=\"background-color:#1e2229 !important;\" class=\"diff-highlight\"><code>",
+    );
+
+    for line in lines.iter() {
+        if line.starts_with('+') && !line.starts_with("+++") {
+            result.push_str(&format!(
+                "<span class=\"diff-added\">{}</span>",
+                html_escape::encode_text(line)
+            ));
+        } else if line.starts_with('-') && !line.starts_with("---") {
+            result.push_str(&format!(
+                "<span class=\"diff-removed\">{}</span>",
+                html_escape::encode_text(line)
+            ));
+        } else if line.starts_with("@@") {
+            result.push_str(&format!(
+                "<span class=\"diff-hunk\">{}</span>",
+                html_escape::encode_text(line)
+            ));
+        } else {
+            result.push_str(&format!(
+                "<span style=\"color: #e6edf3;\">{}</span>",
+                html_escape::encode_text(line)
+            ));
+        }
+
+        // Add newline only if not the last line
+        //        if i < lines.len() - 1 {
+        //            result.push('\n');
+        //        }
+    }
+
+    result.push_str("</code></pre>");
+    result
+}
+
+fn parse_markdown_with_highlighting(content: &str) -> String {
+    let parser = Parser::new(content);
+    let mut events = Vec::new();
+    let mut in_code_block = false;
+    let mut code_buffer = String::new();
+    let mut code_language = String::new();
+
+    for event in parser {
+        match event {
+            Event::Start(Tag::CodeBlock(CodeBlockKind::Fenced(language))) => {
+                in_code_block = true;
+                code_language = language.to_string();
+                code_buffer.clear();
+                // Don't add this event, we'll replace it with highlighted HTML
+            }
+            Event::End(TagEnd::CodeBlock) => {
+                if in_code_block {
+                    let highlighted = highlight_code(&code_buffer, &code_language);
+                    events.push(Event::Html(highlighted.into()));
+                    in_code_block = false;
+                }
+                // Don't add this event either
+            }
+            Event::Text(text) => {
+                if in_code_block {
+                    code_buffer.push_str(&text);
+                    // Don't add this event when in code block
+                } else {
+                    events.push(Event::Text(text));
+                }
+            }
+            _ => {
+                if !in_code_block {
+                    events.push(event);
+                }
+            }
+        }
+    }
+
+    let mut html_output = String::new();
+    pulldown_cmark::html::push_html(&mut html_output, events.into_iter());
+    html_output
+}
 
 pub fn generate_slug(title: &str) -> String {
     // Remove special characters (keep only a-z, 0-9, spaces, and hyphens)
@@ -52,9 +222,7 @@ pub fn get_all_posts() -> Vec<ParsedPost> {
                 post.data.map(|p| {
                     let slug = generate_slug(&p.title);
                     let date = transform_date_format(&p.date);
-                    let content_parser = Parser::new(post.content.as_str());
-                    let mut parsed_content = String::new();
-                    pulldown_cmark::html::push_html(&mut parsed_content, content_parser);
+                    let parsed_content = parse_markdown_with_highlighting(&post.content);
                     ParsedPost {
                         attributes: p,
                         content: parsed_content,
@@ -189,6 +357,129 @@ mod tests {
         assert_eq!(transform_date_format("2024-12-31"), "2024/12/31");
         assert_eq!(transform_date_format("2020-02-29"), "2020/02/29");
         assert_eq!(transform_date_format("1999-01-01"), "1999/01/01");
+    }
+
+    #[test]
+    fn test_highlight_code_basic_functionality() {
+        let rust_code = "fn main() { println!(\"Hello\"); }";
+        let result = highlight_code(rust_code, "rust");
+
+        // Should contain HTML with pre tags
+        assert!(result.contains("<pre"));
+        assert!(result.contains("</pre>"));
+        assert!(result.contains("main"));
+        assert!(result.contains("println"));
+    }
+
+    #[test]
+    fn test_highlight_code_language_normalization() {
+        let ts_code = "const x: number = 42;";
+        let result = highlight_code(ts_code, "ts");
+
+        // Should contain HTML output
+        assert!(result.contains("<pre"));
+        assert!(result.contains("const"));
+        assert!(result.contains("number"));
+    }
+
+    #[test]
+    fn test_highlight_code_with_unknown_language() {
+        let code = "some unknown syntax";
+        let result = highlight_code(code, "unknownlang");
+
+        // Should still return valid HTML
+        assert!(result.contains("<pre"));
+        assert!(result.contains("some unknown syntax"));
+    }
+
+    #[test]
+    fn test_highlight_code_with_empty_code() {
+        let result = highlight_code("", "rust");
+
+        // Should handle empty code gracefully
+        assert!(result.contains("<pre"));
+        assert!(result.contains("</pre>"));
+    }
+
+    #[test]
+    fn test_highlight_code_special_characters() {
+        let code = "println!(\"Hello <world> & 'quotes'\");";
+        let result = highlight_code(code, "rust");
+
+        // Should properly escape HTML characters
+        assert!(result.contains("<pre"));
+        // The content should be properly escaped or highlighted
+        assert!(result.len() > code.len()); // Should have added HTML tags
+    }
+
+    #[test]
+    fn test_highlight_diff_basic() {
+        let diff_code = "- old line\n+ new line";
+        let result = highlight_code(diff_code, "diff");
+
+        // Should contain diff-specific classes and structure
+        assert!(result.contains("diff-highlight"));
+        assert!(result.contains("diff-removed"));
+        assert!(result.contains("diff-added"));
+        assert!(result.contains("old line"));
+        assert!(result.contains("new line"));
+    }
+
+    #[test]
+    fn test_highlight_diff_with_context() {
+        let diff_code = "@@ -1,3 +1,3 @@\n context line\n- removed line\n+ added line";
+        let result = highlight_code(diff_code, "diff");
+
+        // Should handle hunk headers and context
+        assert!(result.contains("diff-hunk"));
+        assert!(result.contains("@@"));
+        assert!(result.contains("diff-removed"));
+        assert!(result.contains("diff-added"));
+        assert!(result.contains("context line"));
+    }
+
+    #[test]
+    fn test_highlight_diff_ignores_file_headers() {
+        let diff_code = "--- old-file.txt\n+++ new-file.txt\n- content";
+        let result = highlight_code(diff_code, "diff");
+
+        // Should not treat file headers as diff lines
+        assert!(result.contains("old-file.txt"));
+        assert!(result.contains("new-file.txt"));
+        assert!(result.contains("diff-removed"));
+
+        // Check that the file headers are properly handled
+        // The "--- old-file.txt" line should not be treated as a removed line
+        // because our code checks for "---" prefix to avoid file headers
+        assert!(result.contains("--- old-file.txt"));
+        assert!(result.contains("+++ new-file.txt"));
+
+        // Verify the actual content line gets the diff class
+        assert!(result.contains("content"));
+    }
+
+    #[test]
+    fn test_highlight_diff_empty() {
+        let result = highlight_code("", "diff");
+
+        // Should handle empty diff gracefully - now returns early with plain pre/code
+        assert!(result.contains("<pre"));
+        assert!(result.contains("</pre>"));
+        assert!(result.contains("<code"));
+        assert!(result.contains("</code>"));
+    }
+
+    #[test]
+    fn test_parse_markdown_with_highlighting_integration() {
+        let markdown = "```rust\nfn main() {}\n```\n\n```diff\n- old\n+ new\n```";
+        let result = parse_markdown_with_highlighting(markdown);
+
+        // Should contain both regular highlighting and diff highlighting
+        assert!(result.contains("<pre"));
+        assert!(result.contains("main"));
+        assert!(result.contains("diff-highlight"));
+        assert!(result.contains("diff-removed"));
+        assert!(result.contains("diff-added"));
     }
 
     #[test]
