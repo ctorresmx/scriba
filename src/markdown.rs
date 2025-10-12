@@ -1,5 +1,6 @@
-use gray_matter::Matter;
 use gray_matter::engine::YAML;
+use gray_matter::Matter;
+use pulldown_cmark::Parser;
 use regex::Regex;
 use std::ffi::OsStr;
 use std::fs;
@@ -51,9 +52,12 @@ pub fn get_all_posts() -> Vec<ParsedPost> {
                 post.data.map(|p| {
                     let slug = generate_slug(&p.title);
                     let date = transform_date_format(&p.date);
+                    let content_parser = Parser::new(post.content.as_str());
+                    let mut parsed_content = String::new();
+                    pulldown_cmark::html::push_html(&mut parsed_content, content_parser);
                     ParsedPost {
                         attributes: p,
-                        content: post.content,
+                        content: parsed_content,
                         slug: slug.clone(),
                         url: generate_url(&date, &slug.as_str()),
                         formatted_date: date,
@@ -251,8 +255,8 @@ This is test content for the post."#,
 
     #[test]
     fn test_post_parsing_integration() {
-        use gray_matter::Matter;
         use gray_matter::engine::YAML;
+        use gray_matter::Matter;
 
         let matter = Matter::<YAML>::new();
         let content =
@@ -282,8 +286,8 @@ This is test content for the post."#,
 
     #[test]
     fn test_post_status_parsing() {
-        use gray_matter::Matter;
         use gray_matter::engine::YAML;
+        use gray_matter::Matter;
 
         let matter = Matter::<YAML>::new();
 

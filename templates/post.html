@@ -1,5 +1,22 @@
 {% extends "base.html" %}
 
+{% block extra_head %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.5.1/github-markdown-dark.min.css">
+<style>
+  .markdown-body {
+    background-color: #2a323c !important;
+    font-family: "Courier", monospace !important;
+  }
+  .markdown-body ul {
+    list-style: disc;
+  }
+  .markdown-body img {
+    display: block;
+    margin: 0 auto;
+  }
+</style>
+{% endblock %}
+
 {% block header_title %}{{ header_title }}{% endblock %}
 
 {% block content %}
