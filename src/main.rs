@@ -7,7 +7,7 @@ mod markdown;
 mod models;
 mod templates;
 
-use crate::{config::get_blog_config, handlers::index, handlers::post_page};
+use crate::{config::get_blog_config, handlers::favicon, handlers::index, handlers::post_page};
 
 #[tokio::main]
 async fn main() {
@@ -15,6 +15,7 @@ async fn main() {
     let app = Router::new()
         .route("/", get(index))
         .route("/{year}/{month}/{day}/{slug}", get(post_page))
+        .route("/favicon.ico", get(favicon))
         .nest_service("/static", ServeDir::new("static"))
         .with_state(config);
 

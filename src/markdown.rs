@@ -74,7 +74,10 @@ fn highlight_code(code: &str, language: &str) -> String {
     match highlighted_html_for_string(code, &syntax_set, syntax, theme) {
         Ok(highlighted) => highlighted,
         Err(e) => {
-            eprintln!("Warning: Syntax highlighting failed for language '{}': {}", language, e);
+            eprintln!(
+                "Warning: Syntax highlighting failed for language '{}': {}",
+                language, e
+            );
             // Fallback to plain code block with proper HTML escaping
             format!("<pre><code>{}</code></pre>", html_escape::encode_text(code))
         }
@@ -90,7 +93,7 @@ fn highlight_diff(
     // Early return for empty diff
     if code.is_empty() {
         return String::from(
-            "<pre style=\"background-color:#1e2229 !important;\" class=\"diff-highlight\"><code></code></pre>"
+            "<pre style=\"background-color:#1e2229 !important;\" class=\"diff-highlight\"><code></code></pre>",
         );
     }
 
