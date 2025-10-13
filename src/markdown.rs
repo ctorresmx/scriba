@@ -227,11 +227,6 @@ fn highlight_diff(
                 html_escape::encode_text(line)
             ));
         }
-
-        // Add newline only if not the last line
-        //        if i < lines.len() - 1 {
-        //            result.push('\n');
-        //        }
     }
 
     result.push_str("</code></pre>");
