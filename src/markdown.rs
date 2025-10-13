@@ -11,6 +11,101 @@ use syntect::parsing::SyntaxSet;
 use crate::config::get_blog_config;
 use crate::models::{ParsedPost, PostAttributes, PostStatus};
 
+fn process_image_paths(content: &str) -> Result<String, String> {
+    // Regex to match markdown image syntax: ![alt](path)
+    let image_regex = Regex::new(r"!\[([^\]]*)\]\(([^)]+)\)").unwrap();
+
+    let result = image_regex.replace_all(content, |caps: &regex::Captures| {
+        let alt_text = &caps[1];
+        let path = &caps[2];
+
+        // Skip external URLs (already absolute)
+        if path.starts_with("http://") || path.starts_with("https://") {
+            return format!("![{}]({})", alt_text, path);
+        }
+
+        // Block unsafe protocols
+        if path.starts_with("file://") || path.starts_with("ftp://") {
+            eprintln!("Blocked unsafe protocol in image path: {}", path);
+            return format!("![{}](#blocked-unsafe-protocol)", alt_text);
+        }
+
+        // Block path traversal attempts
+        if path.contains("../") || path.contains("..\\") {
+            eprintln!("Blocked path traversal in image path: {}", path);
+            return format!("![{}](#blocked-path-traversal)", alt_text);
+        }
+
+        // Convert relative paths to /assets/ paths
+        // Remove leading ./ if present
+        let normalized_path = if path.starts_with("./") {
+            &path[2..]
+        } else if path.starts_with("/assets/") {
+            // Already an assets path, keep as-is
+            return format!("![{}]({})", alt_text, path);
+        } else {
+            path
+        };
+
+        format!("![{}](/assets/{})", alt_text, normalized_path)
+    });
+
+    Ok(result.to_string())
+}
+
+fn parse_markdown_with_highlighting(content: &str) -> String {
+    // Process image paths first, before markdown parsing
+    let content = match process_image_paths(content) {
+        Ok(processed) => processed,
+        Err(e) => {
+            eprintln!("Error processing image paths: {}", e);
+            content.to_string()
+        }
+    };
+
+    let parser = Parser::new(&content);
+    let mut events = Vec::new();
+    let mut in_code_block = false;
+    let mut code_buffer = String::new();
+    let mut code_language = String::new();
+
+    for event in parser {
+        match event {
+            Event::Start(Tag::CodeBlock(CodeBlockKind::Fenced(language))) => {
+                in_code_block = true;
+                code_language = language.to_string();
+                code_buffer.clear();
+                // Don't add this event, we'll replace it with highlighted HTML
+            }
+            Event::End(TagEnd::CodeBlock) => {
+                if in_code_block {
+                    let highlighted = highlight_code(&code_buffer, &code_language);
+                    events.push(Event::Html(highlighted.into()));
+                    in_code_block = false;
+                }
+                // Don't add this event either
+            }
+            Event::Text(text) => {
+                if in_code_block {
+                    code_buffer.push_str(&text);
+                    // Don't add this event when in code block
+                } else {
+                    events.push(Event::Text(text));
+                }
+            }
+            _ => {
+                if !in_code_block {
+                    events.push(event);
+                }
+            }
+        }
+    }
+
+    let mut html_output = String::new();
+    pulldown_cmark::html::push_html(&mut html_output, events.into_iter());
+    html_output
+}
+
 fn highlight_code(code: &str, language: &str) -> String {
     // Early return for empty code
     if code.is_empty() {
@@ -135,50 +230,6 @@ fn highlight_diff(
 
     result.push_str("</code></pre>");
     result
-}
-
-fn parse_markdown_with_highlighting(content: &str) -> String {
-    let parser = Parser::new(content);
-    let mut events = Vec::new();
-    let mut in_code_block = false;
-    let mut code_buffer = String::new();
-    let mut code_language = String::new();
-
-    for event in parser {
-        match event {
-            Event::Start(Tag::CodeBlock(CodeBlockKind::Fenced(language))) => {
-                in_code_block = true;
-                code_language = language.to_string();
-                code_buffer.clear();
-                // Don't add this event, we'll replace it with highlighted HTML
-            }
-            Event::End(TagEnd::CodeBlock) => {
-                if in_code_block {
-                    let highlighted = highlight_code(&code_buffer, &code_language);
-                    events.push(Event::Html(highlighted.into()));
-                    in_code_block = false;
-                }
-                // Don't add this event either
-            }
-            Event::Text(text) => {
-                if in_code_block {
-                    code_buffer.push_str(&text);
-                    // Don't add this event when in code block
-                } else {
-                    events.push(Event::Text(text));
-                }
-            }
-            _ => {
-                if !in_code_block {
-                    events.push(event);
-                }
-            }
-        }
-    }
-
-    let mut html_output = String::new();
-    pulldown_cmark::html::push_html(&mut html_output, events.into_iter());
-    html_output
 }
 
 pub fn generate_slug(title: &str) -> String {
@@ -633,5 +684,125 @@ This is test content for the post."#,
         assert!(!slug.starts_with('-'));
         assert!(!slug.ends_with('-'));
         assert!(!slug.contains("  "));
+    }
+
+    #[test]
+    fn test_process_image_paths_relative_to_assets() {
+        let markdown = "![Alt text](./images/photo.png)";
+        let result = process_image_paths(markdown).unwrap();
+        assert_eq!(result, "![Alt text](/assets/images/photo.png)");
+    }
+
+    #[test]
+    fn test_process_image_paths_relative_without_dot_slash() {
+        let markdown = "![Alt text](images/photo.png)";
+        let result = process_image_paths(markdown).unwrap();
+        assert_eq!(result, "![Alt text](/assets/images/photo.png)");
+    }
+
+    #[test]
+    fn test_process_image_paths_preserves_external_urls() {
+        let markdown_http = "![Alt text](http://example.com/image.png)";
+        let result_http = process_image_paths(markdown_http).unwrap();
+        assert_eq!(result_http, "![Alt text](http://example.com/image.png)");
+
+        let markdown_https = "![Alt text](https://example.com/image.png)";
+        let result_https = process_image_paths(markdown_https).unwrap();
+        assert_eq!(
+            result_https,
+            "![Alt text](https://example.com/image.png)"
+        );
+    }
+
+    #[test]
+    fn test_process_image_paths_blocks_unsafe_protocols() {
+        let markdown_file = "![Alt text](file:///etc/passwd)";
+        let result_file = process_image_paths(markdown_file).unwrap();
+        assert_eq!(result_file, "![Alt text](#blocked-unsafe-protocol)");
+
+        let markdown_ftp = "![Alt text](ftp://example.com/image.png)";
+        let result_ftp = process_image_paths(markdown_ftp).unwrap();
+        assert_eq!(result_ftp, "![Alt text](#blocked-unsafe-protocol)");
+    }
+
+    #[test]
+    fn test_process_image_paths_blocks_path_traversal() {
+        let markdown_unix = "![Alt text](../../../etc/passwd.png)";
+        let result_unix = process_image_paths(markdown_unix).unwrap();
+        assert_eq!(result_unix, "![Alt text](#blocked-path-traversal)");
+
+        let markdown_windows = "![Alt text](..\\..\\windows\\system32\\image.png)";
+        let result_windows = process_image_paths(markdown_windows).unwrap();
+        assert_eq!(result_windows, "![Alt text](#blocked-path-traversal)");
+
+        let markdown_mixed = "![Alt text](images/../../../secret.png)";
+        let result_mixed = process_image_paths(markdown_mixed).unwrap();
+        assert_eq!(result_mixed, "![Alt text](#blocked-path-traversal)");
+    }
+
+    #[test]
+    fn test_process_image_paths_preserves_already_assets_path() {
+        let markdown = "![Alt text](/assets/images/photo.png)";
+        let result = process_image_paths(markdown).unwrap();
+        assert_eq!(result, "![Alt text](/assets/images/photo.png)");
+    }
+
+    #[test]
+    fn test_process_image_paths_multiple_images() {
+        let markdown = r#"
+# Blog Post
+
+Here's an image: ![First](./image1.png)
+
+And another: ![Second](image2.jpg)
+
+External image: ![Third](https://example.com/image.png)
+"#;
+        let result = process_image_paths(markdown).unwrap();
+
+        assert!(result.contains("![First](/assets/image1.png)"));
+        assert!(result.contains("![Second](/assets/image2.jpg)"));
+        assert!(result.contains("![Third](https://example.com/image.png)"));
+    }
+
+    #[test]
+    fn test_process_image_paths_nested_paths() {
+        let markdown = "![Alt text](./posts/2025/images/photo.png)";
+        let result = process_image_paths(markdown).unwrap();
+        assert_eq!(result, "![Alt text](/assets/posts/2025/images/photo.png)");
+    }
+
+    #[test]
+    fn test_process_image_paths_empty_alt_text() {
+        let markdown = "![](./image.png)";
+        let result = process_image_paths(markdown).unwrap();
+        assert_eq!(result, "![](/assets/image.png)");
+    }
+
+    #[test]
+    fn test_process_image_paths_alt_text_with_special_chars() {
+        let markdown = "![Alt text with spaces and 123](./image.png)";
+        let result = process_image_paths(markdown).unwrap();
+        assert_eq!(
+            result,
+            "![Alt text with spaces and 123](/assets/image.png)"
+        );
+    }
+
+    #[test]
+    fn test_process_image_paths_integration_with_markdown_parsing() {
+        let markdown = r#"
+# Test Post
+
+Here's an image: ![Test Image](./test.png)
+
+Some text here.
+"#;
+        let html = parse_markdown_with_highlighting(markdown);
+
+        // Should contain the processed image path
+        assert!(html.contains("/assets/test.png"));
+        assert!(html.contains("<img"));
+        assert!(html.contains("alt=\"Test Image\""));
     }
 }

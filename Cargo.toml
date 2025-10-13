@@ -19,3 +19,4 @@ html-escape = "0.2.13"
 
 [dev-dependencies]
 temp-env = "0.3.6"
+tempfile = "3.17.0"

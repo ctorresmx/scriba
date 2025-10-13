@@ -144,6 +144,7 @@ mod tests {
             copyright: "Test Copyright".to_string(),
             posts_dir: "./test_posts".to_string(),
             favicon_text: "TB".to_string(),
+            port: "8000".to_string(),
         }
     }
 
