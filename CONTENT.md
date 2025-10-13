@@ -219,7 +219,7 @@ Scriba will find posts in any subdirectory within `posts/`.
 1. **Front-load important information** - Put key points early in posts
 2. **Use code examples** - Take advantage of syntax highlighting
 3. **Write in Markdown** - Keep formatting simple and portable
-4. **Test locally** - Use `deno task start` to preview before publishing
+4. **Test locally** - Use `cargo run` to preview before publishing
 
 ## Complete Example
 
