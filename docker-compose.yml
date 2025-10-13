@@ -2,9 +2,7 @@ version: "3.8"
 
 services:
   scriba-rust:
-    build:
-      context: .
-      dockerfile: Dockerfile.rust
+    build: .
     ports:
       - "8000:8000"
     volumes:

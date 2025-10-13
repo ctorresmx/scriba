@@ -18,6 +18,18 @@ use crate::{
 async fn main() {
     let config = get_blog_config();
     let port = config.port.clone();
+
+    // Print startup configuration
+    println!("\n🚀 Starting Scriba blog server\n");
+    println!("Configuration:");
+    println!("  Blog Name:      {}", config.name);
+    println!("  Blog Title:     {}", config.title);
+    println!("  Copyright:      {}", config.copyright);
+    println!("  Posts Dir:      {}", config.posts_dir);
+    println!("  Favicon Text:   {}", config.favicon_text);
+    println!("  Port:           {}", config.port);
+    println!("\n📝 Server running at http://localhost:{}\n", port);
+
     let app = Router::new()
         .route("/", get(index))
         .route("/{year}/{month}/{day}/{slug}", get(post_page))
