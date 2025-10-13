@@ -11,8 +11,8 @@ Common issues and solutions when setting up and running your Scriba blog.
 1. **Invalid YAML frontmatter syntax**
    ```bash
    # Check server console for warnings
-   deno task start
-   # Look for "Skipping file [filename]" messages
+   cargo run
+   # Look for error messages during post parsing
    ```
 
    **Fix:** Validate your frontmatter syntax
@@ -57,7 +57,7 @@ Common issues and solutions when setting up and running your Scriba blog.
 ### "Address already in use" error
 
 ```
-error: Uncaught AddrInUse: Address already in use (os error 48)
+Error: Os { code: 48, kind: AddrInUse, message: "Address already in use" }
 ```
 
 **Fix:**
@@ -66,8 +66,8 @@ error: Uncaught AddrInUse: Address already in use (os error 48)
 # Find what's using port 8000
 lsof -i :8000
 
-# Use a different port
-PORT=8001 deno task start
+# Kill the process or use a different port
+PORT=8001 cargo run
 ```
 
 ### "Permission denied" reading posts
@@ -89,7 +89,23 @@ chmod -R 755 posts
 mkdir posts
 
 # Or set custom directory
-BLOG_POSTS_DIR="./my-posts" deno task start
+BLOG_POSTS_DIR="./my-posts" cargo run
+```
+
+### Compilation errors
+
+**Fix:**
+
+```bash
+# Clean build artifacts and rebuild
+cargo clean
+cargo build
+
+# Update dependencies
+cargo update
+
+# Check for specific errors
+cargo check
 ```
 
 ## Docker Issues
@@ -144,8 +160,8 @@ sudo chown -R 1001:1001 ./posts
 # Clear cache and rebuild
 docker-compose build --no-cache
 
-# Update dependencies
-deno cache --reload deno.json
+# Check Dockerfile syntax
+docker build -t scriba .
 ```
 
 ## Configuration Issues
@@ -159,11 +175,14 @@ deno cache --reload deno.json
 ```bash
 # Set environment variables
 export BLOG_NAME="Your Blog Name"
-export BLOG_TITLE="Your Blog Title"  
+export BLOG_TITLE="Your Blog Title"
 export BLOG_COPYRIGHT="© 2025 Your Name"
 
 # Or create .env file
 echo 'BLOG_NAME="Your Blog Name"' > .env
+
+# Run with environment variables
+BLOG_NAME="Your Blog Name" cargo run
 ```
 
 ### Custom posts directory not working
@@ -174,8 +193,43 @@ echo 'BLOG_NAME="Your Blog Name"' > .env
 # Use absolute path in production
 BLOG_POSTS_DIR="/app/posts"
 
-# Use relative path in development  
+# Use relative path in development
 BLOG_POSTS_DIR="./my-posts"
+```
+
+## Build Issues
+
+### TailwindCSS compilation fails
+
+**Cause:** TailwindCSS CLI not found or not executable
+
+**Fix:**
+
+```bash
+# Ensure tailwindcss binary is in the project root and executable
+chmod +x tailwindcss
+ls -la tailwindcss
+
+# Or download it again
+curl -sLO https://github.com/tailwindlabs/tailwindcss/releases/latest/download/tailwindcss-macos-arm64
+chmod +x tailwindcss-macos-arm64
+mv tailwindcss-macos-arm64 tailwindcss
+```
+
+### Rust version too old
+
+```
+error: package `scriba` cannot be compiled with Rust 1.xx.x
+```
+
+**Fix:**
+
+```bash
+# Update Rust
+rustup update
+
+# Check version
+rustc --version  # Should be 1.70 or later
 ```
 
 ## URL and Routing Issues
@@ -184,19 +238,17 @@ BLOG_POSTS_DIR="./my-posts"
 
 **Causes:**
 
-1. **Fresh manifest out of date**
-   ```bash
-   deno task manifest
-   deno task build
-   ```
+1. **Post not published**
+
+   Check post status is `"published"` not `"draft"`
 
 2. **Special characters in title**
 
-   Titles like `"C++ Tips"` become URLs like `/c-tips` (special chars removed)
+   Titles like `"C++ Tips"` become URLs like `/2025/01/15/c-tips` (special chars removed)
 
-3. **Case sensitivity** (production only)
+3. **Date mismatch**
 
-   Use consistent lowercase for all filenames
+   Ensure the URL matches the date in the post's frontmatter
 
 ## Common YAML Mistakes
 
@@ -225,15 +277,44 @@ When something goes wrong:
 3. **Verify file permissions** on posts directory
 4. **Validate YAML** using an online YAML validator
 5. **Check Docker logs** if using containers
-6. **Try a simple restart** of the development server
+6. **Try cargo clean && cargo build** to rebuild from scratch
+7. **Run cargo test** to ensure core functionality works
+
+## Rust-Specific Issues
+
+### Cargo dependency resolution fails
+
+**Fix:**
+
+```bash
+# Update Cargo.lock
+cargo update
+
+# Or delete and regenerate
+rm Cargo.lock
+cargo build
+```
+
+### Out of memory during compilation
+
+**Fix:**
+
+```bash
+# Use fewer parallel jobs
+cargo build -j 2
+
+# Or build in release mode (less memory for debug symbols)
+cargo build --release
+```
 
 ## Still Having Issues?
 
 1. **Validate your post** against the working examples in the `posts/` directory
 2. **Check the console output** when starting the server - it shows parsing
-   warnings
+   errors
 3. **Test with a fresh, minimal post** to rule out content-specific issues
 4. **Verify environment variables** are set correctly for your deployment
+5. **Run tests** with `cargo test` to verify core functionality
 
 Most issues are caused by YAML syntax errors or Docker configuration problems.
 The server will skip problematic posts and continue running, so check the

@@ -7,7 +7,8 @@ get started.
 
 ### Prerequisites
 
-- [Deno](https://deno.land/) 2.4.2 or later
+- [Rust](https://www.rust-lang.org/tools/install) 1.70 or later
+- [NPM](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm) (for CSS processing)
 - Git
 
 ### Development Setup
@@ -18,38 +19,43 @@ get started.
    cd scriba
    ```
 
-2. **Start the development server**
+2. **Build the project**
    ```bash
-   deno task start
+   cargo build
    ```
 
-   The blog will be available at `http://localhost:8000` with hot reload
-   enabled.
-
-3. **Run tests**
+3. **Start the development server**
    ```bash
-   deno task test
+   cargo run
    ```
 
-4. **Check code quality**
+   The blog will be available at `http://localhost:8000`.
+
+4. **Run tests**
    ```bash
-   deno task check  # Runs format, lint, and type checking
+   cargo test
+   ```
+
+5. **Check code quality**
+   ```bash
+   cargo check               # Type check
+   cargo fmt                 # Format code
+   cargo clippy              # Lint code
    ```
 
 ## Development Workflow
 
 ### Code Style
 
-- **Formatting**: Run `deno fmt` before committing
-- **Linting**: Run `deno lint` to catch issues
-- **Type checking**: Run `deno check **/*.ts **/*.tsx`
-- **All checks**: Use `deno task check` to run everything
+- **Formatting**: Run `cargo fmt` before committing
+- **Linting**: Run `cargo clippy` to catch issues
+- **Type checking**: Run `cargo check` to verify compilation
+- **All checks**: Use `cargo check && cargo fmt --check && cargo clippy -- -D warnings` to run everything
 
 ### Testing
 
-- Tests are colocated with source files using `*_test.ts` naming
-- Run with full permissions:
-  `deno test --allow-read --allow-write --allow-net --allow-env`
+- Tests are colocated with source files using `#[cfg(test)]` modules
+- Run with `cargo test`
 - Write tests for new functionality and bug fixes
 - Maintain existing test coverage
 
@@ -57,23 +63,29 @@ get started.
 
 ```
 scriba/
-├── components/          # Preact components
-├── routes/             # Fresh file-based routes
-├── utils/              # Core utilities (parsing, config)
-├── types/              # TypeScript type definitions
-├── static/             # Static assets
-├── posts/              # Example blog posts
-└── islands/            # Client-side interactive components
+├── src/
+│   ├── main.rs          # Application entry point
+│   ├── handlers.rs      # Request handlers
+│   ├── markdown.rs      # Markdown parsing and post management
+│   ├── config.rs        # Configuration management
+│   ├── models.rs        # Data models
+│   ├── templates.rs     # Template definitions
+│   └── assets.rs        # Asset serving
+├── templates/           # Askama HTML templates
+├── static/              # Static assets (CSS)
+├── posts/               # Example blog posts
+├── Cargo.toml           # Rust dependencies
+└── build.rs             # Build script
 ```
 
 ### Key Areas
 
-- **`utils/parsing.ts`**: Core blog functionality - parses Markdown files and
+- **`src/markdown.rs`**: Core blog functionality - parses Markdown files and
   generates URLs
-- **`utils/config.ts`**: Environment variable handling and blog configuration
-- **`types/blog.ts`**: TypeScript interfaces for posts and configuration
-- **`routes/`**: Fresh framework routes, including the dynamic post route
-- **`components/`**: Reusable UI components
+- **`src/config.rs`**: Environment variable handling and blog configuration
+- **`src/models.rs`**: Rust structs for posts and configuration
+- **`src/handlers.rs`**: Axum request handlers for routes
+- **`templates/`**: Askama templates for HTML generation
 
 ## Making Changes
 
@@ -97,8 +109,10 @@ scriba/
 
 3. **Test thoroughly**
    ```bash
-   deno task test
-   deno task check
+   cargo test
+   cargo check
+   cargo clippy
+   cargo fmt
    ```
 
 4. **Commit with clear messages**
@@ -116,8 +130,10 @@ scriba/
 
 ### PR Requirements
 
-- [ ] Tests pass (`deno task test`)
-- [ ] Code quality checks pass (`deno task check`)
+- [ ] Tests pass (`cargo test`)
+- [ ] Code compiles (`cargo check`)
+- [ ] Code is formatted (`cargo fmt --check`)
+- [ ] No clippy warnings (`cargo clippy`)
 - [ ] Clear commit messages
 - [ ] Documentation updated if needed
 - [ ] PR description explains the changes
@@ -151,27 +167,29 @@ scriba/
 
 ## Code Guidelines
 
-### TypeScript
+### Rust
 
-- Use strict typing - avoid `any`
-- Define interfaces for data structures
-- Export types from `types/blog.ts`
+- Use idiomatic Rust patterns
+- Leverage the type system - avoid `unwrap()` in production code
+- Use `Result` and `Option` properly
+- Add documentation comments for public APIs
 
-### Fresh/Preact Components
+### Axum Handlers
 
-- Use functional components with JSX
-- Follow existing component patterns
-- Keep components focused and reusable
+- Keep handlers focused and composable
+- Use extractors for request data
+- Return proper HTTP status codes
+- Handle errors gracefully
 
 ### File Naming
 
-- Use kebab-case for files: `my-component.tsx`
-- Use `*_test.ts` for test files
+- Use snake_case for Rust files: `my_module.rs`
+- Place tests in `#[cfg(test)]` modules within the same file
 - Use descriptive names that reflect purpose
 
 ### Environment Variables
 
-- Add new env vars to `utils/config.ts`
+- Add new env vars to `src/config.rs`
 - Provide sensible defaults
 - Document in README.md configuration section
 
@@ -179,14 +197,17 @@ scriba/
 
 ### Unit Tests
 
-```typescript
-import { assertEquals } from "https://deno.land/std/testing/asserts.ts";
-import { myFunction } from "./my-module.ts";
+```rust
+#[cfg(test)]
+mod tests {
+    use super::*;
 
-Deno.test("myFunction should do X", () => {
-  const result = myFunction("input");
-  assertEquals(result, "expected");
-});
+    #[test]
+    fn test_my_function() {
+        let result = my_function("input");
+        assert_eq!(result, "expected");
+    }
+}
 ```
 
 ### Integration Tests
@@ -195,12 +216,23 @@ Deno.test("myFunction should do X", () => {
 - Verify URL generation
 - Test environment variable handling
 
+### Async Tests
+
+```rust
+#[tokio::test]
+async fn test_async_handler() {
+    let result = my_async_function().await;
+    assert!(result.is_ok());
+}
+```
+
 ### What to Test
 
 - Core parsing functionality
 - URL slug generation
 - Configuration handling
 - Error handling and edge cases
+- Handler responses and status codes
 
 ## Architecture Decisions
 
@@ -217,9 +249,9 @@ Scriba values **simplicity over complexity**:
 ### Dependencies
 
 - Keep dependencies minimal
-- Prefer Deno standard library
+- Prefer well-maintained crates
 - Document reasons for adding new dependencies
-- Use specific versions (no `latest`)
+- Use specific versions in Cargo.toml
 
 ### Performance
 
@@ -232,11 +264,11 @@ Scriba values **simplicity over complexity**:
 
 (For maintainers)
 
-1. Update version numbers
+1. Update version numbers in Cargo.toml
 2. Update CHANGELOG.md
 3. Create release notes
 4. Tag the release
-5. Update Docker image
+5. Build and push Docker image
 
 ## Getting Help
 
@@ -253,4 +285,4 @@ welcome.
 ## Recognition
 
 All contributors will be recognized in the project. Thank you for helping make
-Scriba better! 🚀
+Scriba better!

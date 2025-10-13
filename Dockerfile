@@ -1,60 +1,73 @@
 # Build stage
-FROM denoland/deno:2.4.2 AS builder
+FROM rust:1.90-trixie AS builder
 
 # Set working directory
 WORKDIR /app
 
-# Copy configuration files first for better caching
-COPY deno.json fresh.config.ts ./
+# Install system dependencies for building (including Node.js for DaisyUI)
+RUN apt-get update && apt-get install -y \
+    curl \
+    nodejs \
+    npm \
+    && rm -rf /var/lib/apt/lists/*
 
-# Cache dependencies by copying import map first
-RUN deno cache --reload deno.json
+# Copy NPM configs
+COPY package.json package-lock.json ./
 
-# Copy source code (excluding posts directory via .dockerignore)
-COPY . .
+# Install NPM packages for CSS compilation
+RUN npm install 
 
-# Install dependencies and build the application
-RUN deno cache main.ts dev.ts
-RUN deno task manifest
-RUN deno task build
+# Copy Cargo files first for better caching
+COPY Cargo.toml Cargo.lock ./
 
-# Runtime stage - use Alpine for smaller image size
-FROM denoland/deno:alpine-2.4.2
+# Copy build script
+COPY build.rs ./
 
-# Install curl for health check (Alpine Linux) - must be done as root
-RUN apk add --no-cache curl
+# Copy source code and templates
+COPY src/ ./src/
+COPY templates/ ./templates/
+COPY static/ ./static/
 
-# Create non-root user for security (Alpine Linux)
-RUN addgroup -g 1001 scriba && \
-    adduser -u 1001 -G scriba -s /bin/sh -D scriba
+# Build the application in release mode
+# This will also run build.rs which compiles Tailwind CSS
+RUN cargo build --release
+
+# Runtime stage - use Debian slim for smaller image size
+FROM debian:trixie-slim
+
+# Install runtime dependencies (curl for health check)
+RUN apt-get update && apt-get install -y \
+    curl \
+    ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+# Create non-root user for security
+RUN groupadd -g 1001 scriba && \
+    useradd -u 1001 -g scriba -s /bin/sh -m scriba
 
 # Set working directory
 WORKDIR /app
 
-# Copy built application from builder stage, excluding heavy/unnecessary files
-COPY --from=builder --chown=scriba:scriba /app .
+# Copy the compiled binary from builder stage
+COPY --from=builder --chown=scriba:scriba /app/target/release/scriba /app/scriba
 
-# Remove unnecessary files from runtime image to keep it lean
-RUN rm -rf node_modules/ \
-    deno.lock \
-    .env* \
-    **/*_test.ts \
-    **/*_test.tsx \
-    **/*.test.ts \
-    **/*.test.tsx 2>/dev/null || true
+# Copy static assets (including compiled CSS)
+COPY --from=builder --chown=scriba:scriba /app/static /app/static
 
-# Create posts directory and deno cache directory for volume mounting and ensure proper permissions
-RUN mkdir -p /app/posts /app/.deno && chown -R scriba:scriba /app
+# Copy templates
+COPY --from=builder --chown=scriba:scriba /app/templates /app/templates
+
+# Create posts directory for volume mounting
+RUN mkdir -p /app/posts && chown -R scriba:scriba /app
 
 # Set environment variables with defaults
-ENV PORT=8000
-ENV DENO_DIR="/app/.deno"
+ENV BLOG_POSTS_DIR="/app/posts"
 
 # Switch to non-root user
 USER scriba
 
-# Expose port
+# Expose default port
 EXPOSE 8000
 
 # Run the application
-CMD ["deno", "run", "-A", "main.ts"]
+CMD ["/app/scriba"]

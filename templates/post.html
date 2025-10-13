@@ -1,0 +1,150 @@
+{% extends "base.html" %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.5.1/github-markdown-dark.min.css">
+<style>
+  .markdown-body {
+    background-color: #2a323c !important;
+    font-family: "Courier", monospace !important;
+  }
+  .markdown-body ul {
+    list-style: disc;
+  }
+  .markdown-body img {
+    display: block;
+    margin: 0 auto;
+  }
+
+  /* Syntax highlighting improvements - Override syntect inline styles */
+  .markdown-body pre {
+    background-color: #1e2229 !important;
+    border: 1px solid #3c434a;
+    border-radius: 6px;
+    padding: 16px;
+    overflow-x: auto;
+    margin: 16px 0;
+  }
+
+  /* Force override syntect's white background */
+  .markdown-body pre[style*="background-color:#ffffff"] {
+    background-color: #1e2229 !important;
+  }
+
+  /* Override any light backgrounds */
+  .markdown-body pre[style*="background-color:#fff"] {
+    background-color: #1e2229 !important;
+  }
+
+  .markdown-body code {
+    background-color: #1e2229 !important;
+    color: #c0c6d0 !important;
+    padding: 2px 4px;
+    border-radius: 3px;
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  }
+
+  .markdown-body pre code {
+    background-color: transparent !important;
+    padding: 0;
+    border-radius: 0;
+    color: inherit;
+  }
+
+  /* Enhanced diff highlighting styles - compact like other code blocks */
+  .diff-highlight .diff-added {
+    background-color: rgba(46, 160, 67, 0.3) !important;
+    color: #a5e075 !important;
+    display: block;
+    width: 100%;
+    padding: 0 4px;
+    margin: 0 -4px;
+    border-left: 3px solid #46a067;
+    font-weight: 500;
+    line-height: 1.45;
+  }
+
+  .diff-highlight .diff-removed {
+    background-color: rgba(248, 81, 73, 0.3) !important;
+    color: #ff7b72 !important;
+    display: block;
+    width: 100%;
+    padding: 0 4px;
+    margin: 0 -4px;
+    border-left: 3px solid #f85149;
+    font-weight: 500;
+    line-height: 1.45;
+  }
+
+  .diff-highlight .diff-hunk {
+    background-color: rgba(56, 139, 253, 0.2) !important;
+    color: #79c0ff !important;
+    display: block;
+    width: 100%;
+    padding: 0 4px;
+    margin: 0 -4px;
+    border-left: 3px solid #388bfd;
+    font-style: italic;
+    line-height: 1.45;
+  }
+
+  /* Remove extra line breaks in diff blocks */
+  .diff-highlight code {
+    line-height: 1.45 !important;
+  }
+
+  /* Since syntect uses inline styles, we need to ensure proper contrast */
+  .markdown-body pre span {
+    /* Let syntect's colors show through but ensure readability */
+    text-shadow: none !important;
+  }
+
+  /* Boost contrast for better visibility on dark background */
+  .markdown-body pre span[style*="color:#323232"] {
+    color: #e6edf3 !important; /* Light gray text instead of dark gray */
+  }
+
+  .markdown-body pre span[style*="color:#795da3"] {
+    color: #d2a8ff !important; /* Brighter purple */
+  }
+
+  .markdown-body pre span[style*="color:#0086b3"] {
+    color: #79c0ff !important; /* Brighter blue */
+  }
+
+  .markdown-body pre span[style*="color:#a71d5d"] {
+    color: #ff7b72 !important; /* Brighter red/pink */
+  }
+
+  .markdown-body pre span[style*="color:#183691"] {
+    color: #79c0ff !important; /* Brighter blue for strings */
+  }
+</style>
+{% endblock %}
+
+{% block header_title %}{{ header_title }}{% endblock %}
+
+{% block content %}
+  <article class="max-w-4xl mx-auto px-4 py-8">
+    <header class="mb-8">
+      <h1 class="text-4xl font-bold mb-4">{{ post.attributes.title }}</h1>
+
+      <div class="flex flex-wrap items-center gap-1 text-sm text-base-content/70 mb-4">
+        <span>by {{ post.attributes.author }}</span>
+        <span class="mx-2">•</span>
+        <span>{{ post.formatted_date }}</span>
+      </div>
+
+      <div class="flex flex-wrap gap-2">
+        {% for tag in post.attributes.tags %}
+          <span class="badge badge-outline">
+            {{ tag }}
+          </span>
+        {% endfor %}
+      </div>
+    </header>
+
+    <div data-color-mode="dark" data-dark-theme="dark" class="markdown-body p-6 rounded-lg">
+      {{ post.content | safe }}
+    </div>
+  </article>
+{% endblock %}

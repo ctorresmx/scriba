@@ -8,15 +8,20 @@ posts/
 
 # Node modules and package locks
 node_modules/
-package-lock.json
-yarn.lock
 
-# Fresh build cache and generated files
-_fresh/
+# Rust build artifacts
+target/
+**/*.rs.bk
+*.pdb
+**/mutants.out*/
+
+# Generated files
+static/rust_styles.css
 
 # Development and testing
 **/*_test.ts
 **/*_test.tsx
+**/*_test.rs
 **/*.test.ts
 **/*.test.tsx
 

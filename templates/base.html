@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>{% block header_title %}{{ header_title }}{% endblock %}</title>
+        <link rel="stylesheet" href="/static/rust_styles.css" />
+        <link rel="icon" type="image/svg+xml" href="/favicon.ico" />
+        {% block extra_head %}{% endblock %}
+    </head>
+    <body>
+        <div class="layout flex flex-col min-h-screen">
+            <div class="navbar bg-base-300 col-span-2">
+                <div class="navbar-start"></div>
+                <div class="navbar-center">
+                    <a
+                        href="/"
+                        class="no-underline hover:no-underline visited:text-current"
+                    >
+                        <h1 class="text-2xl primary">{{ blog_title }}</h1>
+                    </a>
+                </div>
+                <div class="navbar-end"></div>
+            </div>
+
+            <div class="flex-grow">{% block content %} {% endblock %}</div>
+
+            <footer
+                class="col-span-2 footer sm:footer-horizontal footer-center bg-base-300 text-base-content p-4"
+            >
+                <aside>
+                    <p>Copyright © {{ current_year }} {{ copyright }}</p>
+                </aside>
+            </footer>
+        </div>
+    </body>
+</html>
