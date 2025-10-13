@@ -49,19 +49,7 @@ No vendor lock-in. No proprietary formats. Just Markdown, Git, and Docker.
 ### Prerequisites
 
 - [Rust](https://www.rust-lang.org/tools/install) 1.70 or later
-- [TailwindCSS CLI](https://github.com/tailwindlabs/tailwindcss/releases) (for CSS compilation)
-- [NPM](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm) (for Daisy installation)
-
-### Install TailwindCSS CLI
-
-You need the standalone TailwindCSS CLI to compile the CSS. Find your OS-specific binary on the [GitHub releases page](https://github.com/tailwindlabs/tailwindcss/releases).
-
-```bash
-# Download the TailwindCSS CLI executable (macOS ARM64 example)
-curl -sLO https://github.com/tailwindlabs/tailwindcss/releases/latest/download/tailwindcss-macos-arm64
-chmod +x tailwindcss-macos-arm64
-mv tailwindcss-macos-arm64 tailwindcss
-```
+- [NPM](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm) (for CSS processing)
 
 ### Get Started
 

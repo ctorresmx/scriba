@@ -8,8 +8,7 @@ get started.
 ### Prerequisites
 
 - [Rust](https://www.rust-lang.org/tools/install) 1.70 or later
-- [TailwindCSS CLI](https://github.com/tailwindlabs/tailwindcss/releases) (for CSS compilation)
-- NPM (for DaisyUI)
+- [NPM](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm) (for CSS processing)
 - Git
 
 ### Development Setup

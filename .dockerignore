@@ -6,11 +6,8 @@ posts/
 .env.local
 .env.example
 
-# Node modules and package locks (Deno)
+# Node modules and package locks
 node_modules/
-
-# Fresh build cache and generated files (Deno)
-_fresh/
 
 # Rust build artifacts
 target/
@@ -18,8 +15,7 @@ target/
 *.pdb
 **/mutants.out*/
 
-# Generated files (both)
-tailwindcss
+# Generated files
 static/rust_styles.css
 
 # Development and testing
@@ -38,11 +34,6 @@ static/rust_styles.css
 README.md
 *.md
 CLAUDE.md
-
-# Docker files for alternate versions
-Dockerfile.rust
-docker-compose.rust.yml
-.dockerignore.rust
 
 # IDE and editor files
 .vscode/
