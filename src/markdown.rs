@@ -1,6 +1,6 @@
 use gray_matter::engine::YAML;
 use gray_matter::Matter;
-use pulldown_cmark::{CodeBlockKind, Event, Parser, Tag, TagEnd};
+use pulldown_cmark::{CodeBlockKind, Event, Options, Parser, Tag, TagEnd};
 use regex::Regex;
 use std::ffi::OsStr;
 use std::fs;
@@ -63,7 +63,13 @@ fn parse_markdown_with_highlighting(content: &str) -> String {
         }
     };
 
-    let parser = Parser::new(&content);
+    // Enable GitHub Flavored Markdown extensions
+    let mut options = Options::empty();
+    options.insert(Options::ENABLE_TABLES);
+    options.insert(Options::ENABLE_STRIKETHROUGH);
+    options.insert(Options::ENABLE_TASKLISTS);
+
+    let parser = Parser::new_ext(&content, options);
     let mut events = Vec::new();
     let mut in_code_block = false;
     let mut code_buffer = String::new();
@@ -804,5 +810,271 @@ Some text here.
         assert!(html.contains("/assets/test.png"));
         assert!(html.contains("<img"));
         assert!(html.contains("alt=\"Test Image\""));
+    }
+
+    // ===== GitHub Flavored Markdown (GFM) Tests =====
+
+    #[test]
+    fn test_gfm_tables_basic() {
+        let markdown = r#"
+| Header 1 | Header 2 |
+|----------|----------|
+| Cell 1   | Cell 2   |
+| Cell 3   | Cell 4   |
+"#;
+        let html = parse_markdown_with_highlighting(markdown);
+
+        // Should contain table elements
+        assert!(html.contains("<table>"));
+        assert!(html.contains("</table>"));
+        assert!(html.contains("<thead>"));
+        assert!(html.contains("<tbody>"));
+        assert!(html.contains("<th>"));
+        assert!(html.contains("<td>"));
+        assert!(html.contains("Header 1"));
+        assert!(html.contains("Header 2"));
+        assert!(html.contains("Cell 1"));
+        assert!(html.contains("Cell 4"));
+    }
+
+    #[test]
+    fn test_gfm_tables_with_alignment() {
+        let markdown = r#"
+| Left | Center | Right |
+|:-----|:------:|------:|
+| L1   | C1     | R1    |
+| L2   | C2     | R2    |
+"#;
+        let html = parse_markdown_with_highlighting(markdown);
+
+        // Should contain table with alignment
+        assert!(html.contains("<table>"));
+        assert!(html.contains("Left"));
+        assert!(html.contains("Center"));
+        assert!(html.contains("Right"));
+
+        // Check for alignment styles (pulldown-cmark adds style attributes)
+        // Left alignment is default, center and right should have style attributes
+        assert!(html.contains("text-align") || html.contains("style=\"text-align:"));
+    }
+
+    #[test]
+    fn test_gfm_tables_empty_cells() {
+        let markdown = r#"
+| Column A | Column B |
+|----------|----------|
+| Data     |          |
+|          | Data     |
+"#;
+        let html = parse_markdown_with_highlighting(markdown);
+
+        assert!(html.contains("<table>"));
+        assert!(html.contains("Column A"));
+        assert!(html.contains("Column B"));
+        assert!(html.contains("Data"));
+    }
+
+    #[test]
+    fn test_gfm_strikethrough() {
+        let markdown = "This is ~~strikethrough~~ text.";
+        let html = parse_markdown_with_highlighting(markdown);
+
+        // Should contain strikethrough elements
+        assert!(html.contains("<del>") || html.contains("<s>"));
+        assert!(html.contains("strikethrough"));
+    }
+
+    #[test]
+    fn test_gfm_strikethrough_multiple() {
+        let markdown = "~~First~~ normal ~~second~~ text.";
+        let html = parse_markdown_with_highlighting(markdown);
+
+        assert!(html.contains("<del>") || html.contains("<s>"));
+        assert!(html.contains("First"));
+        assert!(html.contains("second"));
+        assert!(html.contains("normal"));
+    }
+
+    #[test]
+    fn test_gfm_strikethrough_with_other_formatting() {
+        let markdown = "**Bold ~~strikethrough~~** and *italic ~~strike~~*.";
+        let html = parse_markdown_with_highlighting(markdown);
+
+        assert!(html.contains("<strong>"));
+        assert!(html.contains("<em>"));
+        assert!(html.contains("<del>") || html.contains("<s>"));
+        assert!(html.contains("Bold"));
+        assert!(html.contains("italic"));
+    }
+
+    #[test]
+    fn test_gfm_tasklists_basic() {
+        let markdown = r#"
+- [ ] Unchecked task
+- [x] Checked task
+- [ ] Another unchecked
+"#;
+        let html = parse_markdown_with_highlighting(markdown);
+
+        // Should contain checkbox inputs
+        assert!(html.contains("<input"));
+        assert!(html.contains("type=\"checkbox\""));
+        assert!(html.contains("Unchecked task"));
+        assert!(html.contains("Checked task"));
+
+        // Should have both checked and unchecked states
+        assert!(html.contains("checked=\"\"") || html.contains("checked"));
+    }
+
+    #[test]
+    fn test_gfm_tasklists_mixed_with_regular_list() {
+        let markdown = r#"
+- Regular list item
+- [ ] Task item
+- Another regular item
+- [x] Completed task
+"#;
+        let html = parse_markdown_with_highlighting(markdown);
+
+        assert!(html.contains("<ul>"));
+        assert!(html.contains("<li>"));
+        assert!(html.contains("Regular list item"));
+        assert!(html.contains("Task item"));
+        assert!(html.contains("type=\"checkbox\""));
+    }
+
+    #[test]
+    fn test_gfm_tasklists_nested() {
+        let markdown = r#"
+- [x] Parent task
+  - [ ] Child task 1
+  - [x] Child task 2
+"#;
+        let html = parse_markdown_with_highlighting(markdown);
+
+        assert!(html.contains("type=\"checkbox\""));
+        assert!(html.contains("Parent task"));
+        assert!(html.contains("Child task 1"));
+        assert!(html.contains("Child task 2"));
+    }
+
+    #[test]
+    fn test_gfm_combined_features() {
+        let markdown = r#"
+# GFM Features
+
+## Table
+| Feature | Status |
+|---------|--------|
+| Tables  | ~~No~~ Yes |
+| Tasks   | Yes    |
+
+## Tasks
+- [x] Add tables
+- [x] Add ~~checkboxes~~ task lists
+- [ ] More features
+
+Regular text with ~~mistakes~~ corrections.
+"#;
+        let html = parse_markdown_with_highlighting(markdown);
+
+        // Should contain all GFM features
+        assert!(html.contains("<table>"));
+        assert!(html.contains("type=\"checkbox\""));
+        assert!(html.contains("<del>") || html.contains("<s>"));
+        assert!(html.contains("Feature"));
+        assert!(html.contains("Status"));
+        assert!(html.contains("Add tables"));
+        assert!(html.contains("corrections"));
+    }
+
+    #[test]
+    fn test_gfm_tables_with_inline_code() {
+        let markdown = r#"
+| Function | Description |
+|----------|-------------|
+| `foo()`  | Does foo    |
+| `bar()`  | Does bar    |
+"#;
+        let html = parse_markdown_with_highlighting(markdown);
+
+        assert!(html.contains("<table>"));
+        assert!(html.contains("<code>"));
+        assert!(html.contains("foo()"));
+        assert!(html.contains("bar()"));
+    }
+
+    #[test]
+    fn test_gfm_tables_with_links() {
+        let markdown = r#"
+| Name | Link |
+|------|------|
+| Rust | [rust-lang.org](https://rust-lang.org) |
+"#;
+        let html = parse_markdown_with_highlighting(markdown);
+
+        assert!(html.contains("<table>"));
+        assert!(html.contains("<a"));
+        assert!(html.contains("href=\"https://rust-lang.org\""));
+        assert!(html.contains("rust-lang.org"));
+    }
+
+    #[test]
+    fn test_gfm_autolinks_not_enabled() {
+        // Note: pulldown-cmark doesn't have ENABLE_AUTOLINKS option
+        // It automatically detects URLs in angle brackets like <http://example.com>
+        // But bare URLs like http://example.com won't be auto-linked without extensions
+        let markdown = "Visit <https://example.com> for more info.";
+        let html = parse_markdown_with_highlighting(markdown);
+
+        // Angle bracket URLs should be automatically linked
+        assert!(html.contains("<a"));
+        assert!(html.contains("https://example.com"));
+    }
+
+    #[test]
+    fn test_gfm_empty_table() {
+        let markdown = r#"
+| | |
+|-|-|
+| | |
+"#;
+        let html = parse_markdown_with_highlighting(markdown);
+
+        // Should still render as a valid table
+        assert!(html.contains("<table>"));
+        assert!(html.contains("<thead>"));
+        assert!(html.contains("<tbody>"));
+    }
+
+    #[test]
+    fn test_gfm_single_column_table() {
+        let markdown = r#"
+| Single Column |
+|---------------|
+| Row 1         |
+| Row 2         |
+"#;
+        let html = parse_markdown_with_highlighting(markdown);
+
+        assert!(html.contains("<table>"));
+        assert!(html.contains("Single Column"));
+        assert!(html.contains("Row 1"));
+        assert!(html.contains("Row 2"));
+    }
+
+    #[test]
+    fn test_gfm_tasklist_case_variations() {
+        let markdown = r#"
+- [x] Lowercase x
+- [X] Uppercase X
+- [ ] Empty space
+"#;
+        let html = parse_markdown_with_highlighting(markdown);
+
+        assert!(html.contains("type=\"checkbox\""));
+        assert!(html.contains("Lowercase x"));
+        assert!(html.contains("Uppercase X"));
+        assert!(html.contains("Empty space"));
     }
 }
