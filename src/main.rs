@@ -15,6 +15,7 @@ use crate::{
 #[tokio::main]
 async fn main() {
     let config = get_blog_config();
+    let port = config.port.clone();
     let app = Router::new()
         .route("/", get(index))
         .route("/{year}/{month}/{day}/{slug}", get(post_page))
@@ -23,6 +24,8 @@ async fn main() {
         .fallback(not_found_handler)
         .with_state(config);
 
-    let listener = tokio::net::TcpListener::bind("0.0.0.0:8000").await.unwrap();
+    let listener = tokio::net::TcpListener::bind(format!("0.0.0.0:{}", port))
+        .await
+        .unwrap();
     axum::serve(listener, app).await.unwrap();
 }

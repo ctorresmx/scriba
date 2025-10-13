@@ -6,17 +6,29 @@ posts/
 .env.local
 .env.example
 
-# Node modules and package locks
+# Node modules and package locks (Deno)
 node_modules/
 package-lock.json
 yarn.lock
 
-# Fresh build cache and generated files
+# Fresh build cache and generated files (Deno)
 _fresh/
+deno.lock
+
+# Rust build artifacts
+target/
+**/*.rs.bk
+*.pdb
+**/mutants.out*/
+
+# Generated files (both)
+tailwindcss
+static/rust_styles.css
 
 # Development and testing
 **/*_test.ts
 **/*_test.tsx
+**/*_test.rs
 **/*.test.ts
 **/*.test.tsx
 
@@ -29,6 +41,11 @@ _fresh/
 README.md
 *.md
 CLAUDE.md
+
+# Docker files for alternate versions
+Dockerfile.rust
+docker-compose.rust.yml
+.dockerignore.rust
 
 # IDE and editor files
 .vscode/

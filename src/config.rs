@@ -16,6 +16,7 @@ pub fn get_blog_config() -> BlogConfig {
         copyright: env::var("BLOG_COPYRIGHT").unwrap_or_else(|_| "Scriba".to_string()),
         posts_dir: env::var("BLOG_POSTS_DIR").unwrap_or_else(|_| "./posts".to_string()),
         favicon_text: env::var("BLOG_FAVICON_TEXT").unwrap_or_else(|_| "Scr".to_string()),
+        port: env::var("PORT").unwrap_or_else(|_| "8000".to_string()),
     }
 }
 

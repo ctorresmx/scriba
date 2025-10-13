@@ -34,4 +34,5 @@ pub struct BlogConfig {
     pub copyright: String,
     pub posts_dir: String,
     pub favicon_text: String,
+    pub port: String,
 }
