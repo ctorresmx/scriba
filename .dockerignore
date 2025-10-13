@@ -8,12 +8,9 @@ posts/
 
 # Node modules and package locks (Deno)
 node_modules/
-package-lock.json
-yarn.lock
 
 # Fresh build cache and generated files (Deno)
 _fresh/
-deno.lock
 
 # Rust build artifacts
 target/

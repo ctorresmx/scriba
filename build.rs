@@ -27,10 +27,11 @@ fn install_npm_packages() {
 }
 
 fn build_tailwind_css() {
-    let tailwind_binary = "./tailwindcss";
+    let npx_binary = "npx";
 
-    let output = Command::new(tailwind_binary)
+    let output = Command::new(npx_binary)
         .args([
+            "@tailwindcss/cli",
             "-i",
             "static/styles.css",
             "-o",

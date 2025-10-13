@@ -11,21 +11,11 @@ RUN apt-get update && apt-get install -y \
     npm \
     && rm -rf /var/lib/apt/lists/*
 
-# Download TailwindCSS standalone CLI for the target architecture
-RUN ARCH=$(uname -m) && \
-    if [ "$ARCH" = "x86_64" ]; then \
-        TAILWIND_ARCH="x64"; \
-    elif [ "$ARCH" = "aarch64" ]; then \
-        TAILWIND_ARCH="arm64"; \
-    else \
-        echo "Unsupported architecture: $ARCH" && exit 1; \
-    fi && \
-    curl -sLO https://github.com/tailwindlabs/tailwindcss/releases/latest/download/tailwindcss-linux-${TAILWIND_ARCH} \
-    && chmod +x tailwindcss-linux-${TAILWIND_ARCH} \
-    && mv tailwindcss-linux-${TAILWIND_ARCH} tailwindcss
+# Copy NPM configs
+COPY package.json package-lock.json ./
 
-# Install DaisyUI for Tailwind CSS (needs to be in node_modules)
-RUN npm init -y && npm install daisyui
+# Install NPM packages for CSS compilation
+RUN npm install 
 
 # Copy Cargo files first for better caching
 COPY Cargo.toml Cargo.lock ./
