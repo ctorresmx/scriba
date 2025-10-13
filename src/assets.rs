@@ -15,10 +15,7 @@ const SUPPORTED_IMAGE_TYPES: &[(&str, &str)] = &[
     (".svg", "image/svg+xml"),
 ];
 
-pub async fn serve_asset(
-    State(config): State<BlogConfig>,
-    Path(path): Path<String>,
-) -> Response {
+pub async fn serve_asset(State(config): State<BlogConfig>, Path(path): Path<String>) -> Response {
     // Validate path for security - block path traversal attempts
     if path.contains("../") || path.contains("..\\") {
         eprintln!("Blocked path traversal attempt in asset path: {}", path);
@@ -154,10 +151,7 @@ mod tests {
         let response = serve_asset(State(config), Path("test.png".to_string())).await;
 
         assert_eq!(response.status(), StatusCode::OK);
-        assert_eq!(
-            response.headers().get("Content-Type").unwrap(),
-            "image/png"
-        );
+        assert_eq!(response.headers().get("Content-Type").unwrap(), "image/png");
     }
 
     #[tokio::test]
@@ -171,10 +165,7 @@ mod tests {
         let response = serve_asset(State(config), Path("test.PNG".to_string())).await;
 
         assert_eq!(response.status(), StatusCode::OK);
-        assert_eq!(
-            response.headers().get("Content-Type").unwrap(),
-            "image/png"
-        );
+        assert_eq!(response.headers().get("Content-Type").unwrap(), "image/png");
     }
 
     #[tokio::test]
@@ -214,19 +205,12 @@ mod tests {
 
         std_fs::create_dir_all(temp_dir.path().join("subfolder")).unwrap();
         let image_content = vec![0x89, 0x50, 0x4E, 0x47];
-        std_fs::write(
-            temp_dir.path().join("subfolder/nested.png"),
-            &image_content,
-        )
-        .unwrap();
+        std_fs::write(temp_dir.path().join("subfolder/nested.png"), &image_content).unwrap();
 
         let response = serve_asset(State(config), Path("subfolder/nested.png".to_string())).await;
 
         assert_eq!(response.status(), StatusCode::OK);
-        assert_eq!(
-            response.headers().get("Content-Type").unwrap(),
-            "image/png"
-        );
+        assert_eq!(response.headers().get("Content-Type").unwrap(), "image/png");
 
         let body = axum::body::to_bytes(response.into_body(), usize::MAX)
             .await
@@ -248,7 +232,8 @@ mod tests {
         ];
 
         for malicious_path in malicious_paths {
-            let response = serve_asset(State(config.clone()), Path(malicious_path.to_string())).await;
+            let response =
+                serve_asset(State(config.clone()), Path(malicious_path.to_string())).await;
 
             assert_eq!(
                 response.status(),

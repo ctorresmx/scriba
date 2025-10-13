@@ -1,5 +1,5 @@
-use gray_matter::engine::YAML;
 use gray_matter::Matter;
+use gray_matter::engine::YAML;
 use pulldown_cmark::{CodeBlockKind, Event, Options, Parser, Tag, TagEnd};
 use regex::Regex;
 use std::ffi::OsStr;
@@ -38,8 +38,8 @@ fn process_image_paths(content: &str) -> Result<String, String> {
 
         // Convert relative paths to /assets/ paths
         // Remove leading ./ if present
-        let normalized_path = if path.starts_with("./") {
-            &path[2..]
+        let normalized_path = if let Some(stripped) = path.strip_prefix("./") {
+            stripped
         } else if path.starts_with("/assets/") {
             // Already an assets path, keep as-is
             return format!("![{}]({})", alt_text, path);
@@ -115,7 +115,7 @@ fn parse_markdown_with_highlighting(content: &str) -> String {
 fn highlight_code(code: &str, language: &str) -> String {
     // Early return for empty code
     if code.is_empty() {
-        return format!("<pre><code></code></pre>");
+        return "<pre><code></code></pre>".to_string();
     }
 
     let syntax_set = SyntaxSet::load_defaults_newlines();
@@ -287,7 +287,7 @@ pub fn get_all_posts() -> Vec<ParsedPost> {
                         attributes: p,
                         content: parsed_content,
                         slug: slug.clone(),
-                        url: generate_url(&date, &slug.as_str()),
+                        url: generate_url(&date, slug.as_str()),
                         formatted_date: date,
                     }
                 })
@@ -606,8 +606,8 @@ This is test content for the post."#,
 
     #[test]
     fn test_post_parsing_integration() {
-        use gray_matter::engine::YAML;
         use gray_matter::Matter;
+        use gray_matter::engine::YAML;
 
         let matter = Matter::<YAML>::new();
         let content =
@@ -637,8 +637,8 @@ This is test content for the post."#,
 
     #[test]
     fn test_post_status_parsing() {
-        use gray_matter::engine::YAML;
         use gray_matter::Matter;
+        use gray_matter::engine::YAML;
 
         let matter = Matter::<YAML>::new();
 
@@ -714,10 +714,7 @@ This is test content for the post."#,
 
         let markdown_https = "![Alt text](https://example.com/image.png)";
         let result_https = process_image_paths(markdown_https).unwrap();
-        assert_eq!(
-            result_https,
-            "![Alt text](https://example.com/image.png)"
-        );
+        assert_eq!(result_https, "![Alt text](https://example.com/image.png)");
     }
 
     #[test]
@@ -789,10 +786,7 @@ External image: ![Third](https://example.com/image.png)
     fn test_process_image_paths_alt_text_with_special_chars() {
         let markdown = "![Alt text with spaces and 123](./image.png)";
         let result = process_image_paths(markdown).unwrap();
-        assert_eq!(
-            result,
-            "![Alt text with spaces and 123](/assets/image.png)"
-        );
+        assert_eq!(result, "![Alt text with spaces and 123](/assets/image.png)");
     }
 
     #[test]

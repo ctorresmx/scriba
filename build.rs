@@ -7,7 +7,7 @@ fn main() {
 fn build_tailwind_css() {
     let tailwind_binary = "./tailwindcss";
 
-    let output = Command::new(&tailwind_binary)
+    let output = Command::new(tailwind_binary)
         .args([
             "-i",
             "static/styles.css",

@@ -45,7 +45,7 @@ pub async fn index(State(config): State<BlogConfig>) -> Result<impl IntoResponse
         blog_title: config.title,
         copyright: config.copyright.clone(),
         current_year: chrono::Utc::now().year().to_string(),
-        posts: posts,
+        posts,
     };
 
     Ok(Html(template.render()?))
@@ -75,8 +75,9 @@ pub async fn post_page(
                 Ok(html) => (StatusCode::OK, Html(html)).into_response(),
                 Err(_) => (
                     StatusCode::INTERNAL_SERVER_ERROR,
-                    Html("<html><body><h1>Error rendering template</h1></body></html>".to_string())
-                ).into_response(),
+                    Html("<html><body><h1>Error rendering template</h1></body></html>".to_string()),
+                )
+                    .into_response(),
             }
         }
         None => {
@@ -183,7 +184,9 @@ mod tests {
         assert_eq!(response.status(), StatusCode::NOT_FOUND);
 
         // Verify the response body contains the 404 template elements
-        let body = axum::body::to_bytes(response.into_body(), usize::MAX).await.unwrap();
+        let body = axum::body::to_bytes(response.into_body(), usize::MAX)
+            .await
+            .unwrap();
         let html = String::from_utf8(body.to_vec()).unwrap();
 
         // Should contain navbar, footer, and 404 message from template

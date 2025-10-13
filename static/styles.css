@@ -1,5 +1,4 @@
 @import "tailwindcss";
-@plugin "daisyui";
 
 body {
   font-family: "Courier", monospace !important;
