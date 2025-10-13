@@ -40,6 +40,7 @@ No vendor lock-in. No proprietary formats. Just Markdown, Git, and Docker.
 - **Axum**: Ergonomic web framework built on Tokio
 - **Askama**: Type-safe templating with compile-time checking
 - **TailwindCSS**: Utility-first CSS framework
+- **DaisyUI**: TailwindCSS plugin
 - **Markdown + YAML**: Content format with frontmatter metadata
 - **Docker**: Containerized deployment
 
@@ -49,6 +50,7 @@ No vendor lock-in. No proprietary formats. Just Markdown, Git, and Docker.
 
 - [Rust](https://www.rust-lang.org/tools/install) 1.70 or later
 - [TailwindCSS CLI](https://github.com/tailwindlabs/tailwindcss/releases) (for CSS compilation)
+- [NPM](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm) (for Daisy installation)
 
 ### Install TailwindCSS CLI
 

@@ -9,6 +9,7 @@ get started.
 
 - [Rust](https://www.rust-lang.org/tools/install) 1.70 or later
 - [TailwindCSS CLI](https://github.com/tailwindlabs/tailwindcss/releases) (for CSS compilation)
+- NPM (for DaisyUI)
 - Git
 
 ### Development Setup

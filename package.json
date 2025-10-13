@@ -1,0 +1,6 @@
+{
+  "name": "scriba",
+  "dependencies": {
+    "daisyui": "^5.2.3"
+  }
+}
