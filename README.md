@@ -1,5 +1,8 @@
 # Scriba
 
+[![CI](https://github.com/ctorresmx/scriba/actions/workflows/ci.yml/badge.svg)](https://github.com/ctorresmx/scriba/actions/workflows/ci.yml)
+[![Docker](https://github.com/ctorresmx/scriba/actions/workflows/docker.yml/badge.svg)](https://github.com/ctorresmx/scriba/actions/workflows/docker.yml)
+
 A minimalist blogging platform built for people who just want to write, not
 wrestle with complex content management systems.
 
