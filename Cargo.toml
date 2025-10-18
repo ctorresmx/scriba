@@ -1,6 +1,7 @@
 [package]
 name = "scriba"
-version = "0.1.0"
+description = "A minimalist blogging platform that transforms Markdown files into a fast blog with clean aesthetic."
+version = "1.0.0"
 edition = "2024"
 build = "build.rs"
 
